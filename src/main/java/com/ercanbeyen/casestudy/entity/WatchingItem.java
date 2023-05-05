@@ -25,8 +25,8 @@ public abstract class WatchingItem implements Serializable {
     protected String title;
     protected String year;
     protected String rated;
-    @JsonFormat(pattern = "d-MMM-yyyy")
-    protected LocalDate released; // TODO: Check type of the released
+    @JsonFormat(pattern = "d MMM yyyy")
+    protected LocalDate released;
     protected Integer runtime;
     protected List<Genre> genres;
     protected String directorName;

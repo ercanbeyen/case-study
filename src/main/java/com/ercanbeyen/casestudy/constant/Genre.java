@@ -1,5 +1,9 @@
 package com.ercanbeyen.casestudy.constant;
 
+import com.ercanbeyen.casestudy.util.StringClearUtils;
+
+import java.util.Locale;
+
 public enum Genre {
     ACTION("Action"),
     ADVENTURE("Adventure"),
@@ -26,6 +30,8 @@ public enum Genre {
             name = "sci_fi";
         }
 
-        return Genre.valueOf(name.toUpperCase());
+        name = name.toUpperCase(Locale.ENGLISH);
+        //name = StringClearUtils.clearTurkishChars(name.toUpperCase());
+        return Genre.valueOf(name);
     }
 }

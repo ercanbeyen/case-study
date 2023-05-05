@@ -1,5 +1,9 @@
 package com.ercanbeyen.casestudy.constant;
 
+import com.ercanbeyen.casestudy.util.StringClearUtils;
+
+import java.util.Locale;
+
 public enum Type {
     MOVIE("movie"),
     SERIES("series");
@@ -15,6 +19,9 @@ public enum Type {
             return null;
         }
 
-        return Type.valueOf(name.toUpperCase());
+        //name = StringClearUtils.clearTurkishChars(name.toUpperCase());
+        //name = name.toUpperCase();
+        name = name.toUpperCase(Locale.ENGLISH);
+        return Type.valueOf(name);
     }
 }
