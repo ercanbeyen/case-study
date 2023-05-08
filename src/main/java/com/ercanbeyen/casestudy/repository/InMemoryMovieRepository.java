@@ -7,12 +7,12 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface MovieRepository {
+public interface InMemoryMovieRepository {
     Long count();
     List<Movie> findAll();
     Optional<Movie> findById(String id);
-    void save(Movie movie);
-    void deleteById(String id);
+    Movie save(Movie movie);
+    String deleteById(String id);
     boolean existsById(String id);
 
 }

@@ -3,7 +3,7 @@ package com.ercanbeyen.casestudy.repository.impl;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.entity.Movie;
 import com.ercanbeyen.casestudy.exception.EntityNotFound;
-import com.ercanbeyen.casestudy.repository.MovieRepository;
+import com.ercanbeyen.casestudy.repository.InMemoryMovieRepository;
 import com.ercanbeyen.casestudy.util.FileHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +16,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class MovieRepositoryImpl implements MovieRepository, CommandLineRunner {
+public class InMemoryMovieRepositoryImpl implements InMemoryMovieRepository, CommandLineRunner {
     private static List<Movie> movieList;
 
     @Override
@@ -41,7 +41,7 @@ public class MovieRepositoryImpl implements MovieRepository, CommandLineRunner {
                 .findFirst();
     }
 
-    public void save(Movie movie) {
+    public Movie save(Movie movie) {
         String id = movie.getImdbID();
 
         if (!existsById(id)) {
@@ -77,9 +77,10 @@ public class MovieRepositoryImpl implements MovieRepository, CommandLineRunner {
         }
 
         FileHandler.writeFile(movieList);
+        return movie;
     }
 
-    public void deleteById(String id) {
+    public String deleteById(String id) {
         Optional<Movie> watchingItem = movieList.stream()
                 .filter(item -> item.getImdbID().equals(id))
                 .findFirst();
@@ -92,10 +93,11 @@ public class MovieRepositoryImpl implements MovieRepository, CommandLineRunner {
 
         if (existsById(id)) {
             log.error("Item {} is not deleted from the database", id);
-            return;
+            return "Item" + id +  "is not deleted from the database";
         }
 
         FileHandler.writeFile(movieList); // delete the object and rewrite the updated list into the file
+        return "Item" + id +  "is successfully deleted from the database";
     }
 
     public boolean existsById(String id) {
