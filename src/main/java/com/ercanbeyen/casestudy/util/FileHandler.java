@@ -1,67 +1,49 @@
-package com.ercanbeyen.casestudy.repository;
+package com.ercanbeyen.casestudy.util;
 
-import com.ercanbeyen.casestudy.util.WatchingItemUtils;
 import com.ercanbeyen.casestudy.constant.Genre;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.entity.Movie;
-import com.ercanbeyen.casestudy.entity.Series;
-import com.ercanbeyen.casestudy.entity.WatchingItem;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
 
-import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Component
-@RequiredArgsConstructor
 @Slf4j
-public class WatchingItemRepository implements CommandLineRunner {
-    private static final List<WatchingItem> watchingItemList = new ArrayList<>();
+public class FileHandler {
+    private static final String filePath = "docs/MovieWebsiteJson.json";
 
-    public List<WatchingItem> getAll() {
-        return watchingItemList;
-    }
-
-    @Override
-    public void run(String... args) throws Exception {
-        JSONParser jsonParser = new JSONParser();
+    public static List<Movie> readFile() {
+        List<Movie> list = new ArrayList<>();
 
         try {
+            JSONParser jsonParser = new JSONParser();
             FileReader fileReader = new FileReader("docs/MovieWebsiteJson.json");
-            Object object = jsonParser.parse(fileReader);
-            JSONArray jsonMovieArray = (JSONArray) object;
-            //System.out.println(movieList);
-            /*jsonMovieArray.forEach(
-                    jsonMovieObject -> movieList.add((Movie) jsonMovieObject));*/
+            Object parsedObject = jsonParser.parse(fileReader);
+            JSONArray jsonArray = (JSONArray) parsedObject;
+            
+            for (Object object : jsonArray) {
+                JSONObject jsonObject = (JSONObject) object;
+                Movie movie = parseMovie(jsonObject);
+                list.add(movie);
+            }
 
-            jsonMovieArray.forEach(movieObject -> parseWatchingItem((JSONObject) movieObject));
             fileReader.close();
-        } catch (FileNotFoundException fileNotFoundException) {
-            log.error("FileNotFound: {}", fileNotFoundException.getMessage());
-            System.out.println();
-        } catch (IOException ioException) {
-            log.error("IOException: {}",  ioException.getMessage());
-            System.out.println();
-        } catch (ParseException parseException) {
-            log.error("ParseException: {}", parseException.getMessage());
-            System.out.println();
+            return list;
+        } catch (ParseException | IOException exception) {
+            throw new RuntimeException(exception.getMessage());
         }
     }
 
-    private static void parseWatchingItem(JSONObject jsonObject) {
-        WatchingItem watchingItem;
-
+    private static Movie parseMovie(JSONObject jsonObject) {
         String imdbID = (String) jsonObject.get("imdbID");
 
         String title = (String) jsonObject.get("Title");
@@ -71,12 +53,9 @@ public class WatchingItemRepository implements CommandLineRunner {
         String rated = (String) jsonObject.get("Rated");
 
         String localDate_string = (String) jsonObject.get("Released");
-        //localDate_string = localDate_string.replaceAll(" ", "-");
-        //LocalDate released = LocalDate.parse(localDate_string, DateTimeFormatter.ofPattern("d-MMM-yyyy"));
         LocalDate released = WatchingItemUtils.handleLocalDate(localDate_string);
 
         String runtime_string = (String) jsonObject.get("Runtime");
-        //Integer runtime = Integer.parseInt(runtime_string.split(" ")[0]);
         Integer runtime = WatchingItemUtils.handleInteger(runtime_string.split(" ")[0]);
 
         String genre_string = (String) jsonObject.get("Genre");
@@ -85,7 +64,6 @@ public class WatchingItemRepository implements CommandLineRunner {
         List<Genre> genreList = new ArrayList<>();
 
         for (String genre : genre_strings) {
-            //genreList.add(Genre.valueOf(genre));
             Genre current = Genre.getGenreByUpperCaseName(genre);
             genreList.add(current);
         }
@@ -110,15 +88,12 @@ public class WatchingItemRepository implements CommandLineRunner {
         String posterUrl = (String) jsonObject.get("url");
 
         String metascore_string = (String) jsonObject.get("Metascore");
-        //Integer metascore = Integer.parseInt(metascore_string);
         Integer metascore = WatchingItemUtils.handleInteger(metascore_string);
 
         String imdbRating_string = (String) jsonObject.get("imdbRating");
-        //Double imdbRating = Double.parseDouble(imdbRating_string);
         Double imdbRating = WatchingItemUtils.handleDouble(imdbRating_string);
 
         String imdbVotes_string = (String) jsonObject.get("imdbRating");
-        //Double imdbVotes = Double.parseDouble(imdbVotes_string);
         Double imdbVotes = WatchingItemUtils.handleDouble(imdbVotes_string);
 
         String type_string = (String) jsonObject.get("Type");
@@ -131,15 +106,18 @@ public class WatchingItemRepository implements CommandLineRunner {
             comingSoon = Boolean.parseBoolean(comingSoon_string);
         }
 
+        Movie movie;
+
         if (type == Type.SERIES) {
             String totalSeasons_string = (String) jsonObject.get("totalSeasons");
             Integer totalSeasons = Integer.parseInt(totalSeasons_string);
 
-            watchingItem = Series.builder()
+            movie = Movie.builder()
                     .imdbID(imdbID)
                     .title(title)
                     .year(year)
                     .released(released)
+                    .languages(languageList)
                     .rated(rated)
                     .runtime(runtime)
                     .genres(genreList)
@@ -147,6 +125,7 @@ public class WatchingItemRepository implements CommandLineRunner {
                     .countries(countryList)
                     .writers(writerList)
                     .awards(awards)
+                    .plot(plot)
                     .imdbRating(imdbRating)
                     .imdbVotes(imdbVotes)
                     .metascore(metascore)
@@ -156,18 +135,20 @@ public class WatchingItemRepository implements CommandLineRunner {
                     .totalSeasons(totalSeasons)
                     .build();
         } else {
-            watchingItem = Movie.builder()
+            movie = Movie.builder()
                     .imdbID(imdbID)
                     .title(title)
                     .year(year)
                     .rated(rated)
                     .released(released)
+                    .languages(languageList)
                     .runtime(runtime)
                     .genres(genreList)
                     .directorName(directorName)
                     .countries(countryList)
                     .writers(writerList)
                     .awards(awards)
+                    .plot(plot)
                     .imdbRating(imdbRating)
                     .imdbVotes(imdbVotes)
                     .metascore(metascore)
@@ -177,8 +158,19 @@ public class WatchingItemRepository implements CommandLineRunner {
                     .build();
         }
 
-        log.info(String.valueOf(watchingItem));
-        watchingItemList.add(watchingItem);
-        log.info(String.valueOf(watchingItemList.size()));
+        log.info(String.valueOf(movie));
+        return movie;
+    }
+
+    public static void writeFile(List<Movie> list) {
+        try {
+            FileWriter fileWriter = new FileWriter(filePath);
+            JSONArray jsonMovieArray = (JSONArray) list;
+            fileWriter.write(jsonMovieArray.toJSONString()); // Overwrite the file
+            fileWriter.flush();
+            fileWriter.close();
+        } catch (IOException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 }
