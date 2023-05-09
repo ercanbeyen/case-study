@@ -48,35 +48,15 @@ public class InMemoryMovieRepositoryImpl implements InMemoryMovieRepository, Com
             movieList.add(movie);
         } else {
             for (Movie movieInDb : movieList) {
-                if (movieInDb.getType() == Type.SERIES) {
-                    movieInDb.setTotalSeasons(movie.getTotalSeasons());
-                }
-
                 if (movieInDb.getImdbID().equals(id)) {
-                    movieInDb.setTitle(movie.getTitle());
-                    movieInDb.setYear(movie.getYear());
-                    movieInDb.setReleased(movie.getReleased());
-                    movieInDb.setGenres(movie.getGenres());
-                    movieInDb.setAwards(movie.getAwards());
-                    movieInDb.setCountries(movie.getCountries());
-                    movieInDb.setLanguages(movie.getLanguages());
-                    movieInDb.setRuntime(movie.getRuntime());
-                    movieInDb.setComingSoon(movie.getComingSoon());
-                    movieInDb.setPlot(movie.getPlot());
-                    movieInDb.setRated(movie.getRated());
-                    movieInDb.setDirectorName(movie.getDirectorName());
-                    movieInDb.setWriters(movieInDb.getWriters());
-                    movieInDb.setImdbRating(movieInDb.getImdbRating());
-                    movieInDb.setImdbVotes(movie.getImdbVotes());
-                    movieInDb.setImdbVotes(movie.getImdbVotes());
-                    movieInDb.setPosterUrl(movie.getPosterUrl());
-                    movieInDb.setMetascore(movie.getMetascore());
+                    movieInDb = movie;
                     break;
                 }
             }
         }
 
         FileHandler.writeFile(movieList);
+        //FileHandler.appendFile(movie);
         return movie;
     }
 
