@@ -3,12 +3,9 @@ package com.ercanbeyen.casestudy.util;
 import com.ercanbeyen.casestudy.constant.Genre;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.entity.Movie;
-import com.ercanbeyen.casestudy.exception.EntityNotFound;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
-import org.json.simple.JSONValue;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
@@ -16,8 +13,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.Month;
-import java.time.MonthDay;
 import java.util.*;
 
 @Slf4j
@@ -183,8 +178,7 @@ public class FileHandler {
                 jsonObjectList.add(jsonObject);
             }
 
-            fileWriter.write(jsonObjectList.toString());
-            //fileWriter.write(JSONArray.toJSONString(list)); // Overwrite the file
+            fileWriter.write(jsonObjectList.toString()); // Overwrite the file
             fileWriter.flush();
             fileWriter.close();
         } catch (IOException exception) {
@@ -195,7 +189,6 @@ public class FileHandler {
     public static void appendFile(Movie movie) {
         try {
             FileWriter fileWriter = new FileWriter(filePath);
-            //JSONObject jsonObject = (JSONObject) JSONValue.parse(new ObjectMapper().writeValueAsString(movie));
             JSONObject jsonObject = convertToJSON(movie);
             fileWriter.append(jsonObject.toJSONString());
             fileWriter.flush();
@@ -234,15 +227,8 @@ public class FileHandler {
 
         map.put("Runtime", runtime_value.toString());
 
-        //String runtime = movie.getRuntime().toString() + " min";
-        //map.put("Runtime", runtime);
-
         StringBuilder genre = new StringBuilder();
         List<Genre> genreList = movie.getGenres();
-
-        if (genreList == null) {
-            log.info("null");
-        }
 
         for (int i = 0; i < genreList.size(); i++) {
             Genre current = genreList.get(i);
@@ -323,17 +309,8 @@ public class FileHandler {
         map.put("Awards", movie.getAwards());
         map.put("Poster", movie.getPosterUrl());
 
-
-        /*
-        if (metascore == null) {
-            map.put("Metascore", "N/A");
-        } else {
-            map.put("Metascore", metascore.toString());
-        }
-         */
-
         Integer metascore = movie.getMetascore();
-        updateMap(metascore, map, "metascore");
+        updateMap(metascore, map, "Metascore");
 
 
         updateMap(movie.getImdbID(), map, "imdbID");

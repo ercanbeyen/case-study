@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 @Data
 @AllArgsConstructor
 public class ExceptionResponse {
-    private String message;
+    private int status;
     private LocalDateTime localDateTime;
+    private String message;
 }
