@@ -5,6 +5,9 @@ import com.ercanbeyen.casestudy.constant.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.*;
+
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
@@ -13,17 +16,18 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Movie implements Serializable {
+public class Movie implements Serializable { // TODO: Fix the BadRequest exception
     private String imdbID; // Primary Key
     private String title;
     private String year;
-    protected String rated;
-    @JsonFormat(pattern = "d MMM yyyy")
+    private String rated;
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate released;
     private Integer runtime;
     private List<Genre> genres;
-    private String directorName;
+    private String director;
     private List<String> writers;
+    private List<String> actors;
     private String plot;
     private List<String> languages;
     private List<String> countries;
@@ -32,8 +36,8 @@ public class Movie implements Serializable {
     private Integer metascore;
     private Double imdbRating;
     private Double imdbVotes;
+    @Enumerated(EnumType.STRING)
     private Type type;
     private Boolean comingSoon;
     private Integer totalSeasons;
-    //protected Optional<Boolean> comingSoon;
 }
