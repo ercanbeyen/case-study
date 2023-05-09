@@ -1,22 +1,19 @@
-package com.ercanbeyen.casestudy.entity;
+package com.ercanbeyen.casestudy.dto;
 
 import com.ercanbeyen.casestudy.constant.Genre;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
-
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
-import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
-public class Movie implements Serializable {
+public class MovieDto {
     private String imdbID; // Primary Key
     private String title;
     private String year;
