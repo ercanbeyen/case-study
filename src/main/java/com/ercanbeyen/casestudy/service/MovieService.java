@@ -1,7 +1,6 @@
 package com.ercanbeyen.casestudy.service;
 
 import com.ercanbeyen.casestudy.dto.MovieDto;
-import com.ercanbeyen.casestudy.entity.Movie;
 
 import java.util.List;
 
