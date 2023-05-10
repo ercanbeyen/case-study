@@ -58,24 +58,18 @@ public class InMemoryMovieRepository implements CommandLineRunner {
         return movie;
     }
 
-    public String deleteById(String id) {
+    public void deleteById(String id) {
         Optional<Movie> watchingItem = movieList.stream()
                 .filter(item -> item.getImdbID().equals(id))
                 .findFirst();
 
-        if (!watchingItem.isPresent()) {
-            throw new EntityNotFound("Item" + id + "is not found");
-        }
-
-        movieList.remove(watchingItem.get());
+        watchingItem.ifPresent(movie -> movieList.remove(movie));
 
         if (existsById(id)) {
-            log.error("Item {} is not deleted from the database", id);
-            return "Item" + id +  "is not deleted from the database";
+            log.error("Movie {} is not deleted from the database", id);
         }
 
         FileHandler.writeFile(movieList); // delete the object and rewrite the updated list into the file
-        return "Item" + id +  "is successfully deleted from the database";
     }
 
     public boolean existsById(String id) {
