@@ -10,6 +10,7 @@ import com.ercanbeyen.casestudy.repository.InMemoryMovieRepository;
 import com.ercanbeyen.casestudy.service.MovieService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -56,9 +57,68 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public List<MovieDto> getMovies() {
-        return repository
-                .findAll()
+    public List<MovieDto> getMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, String title) {
+        List<Movie> movieList = repository.findAll();
+        log.info("Movies are fetched from the database");
+
+        if (type != null) {
+            movieList = movieList
+                    .stream()
+                    .filter(movie -> movie.getType() == type)
+                    .collect(Collectors.toList());
+
+            log.info("Movies are filtered by type");
+        }
+
+
+       if (!StringUtils.isBlank(director)) {
+           movieList = movieList
+                   .stream()
+                   .filter(movie -> movie.getDirector().equals(director))
+                   .collect(Collectors.toList());
+
+           log.info("Movies are filtered by director");
+       }
+
+
+       if (imdbRating != null) {
+           movieList = movieList
+                   .stream()
+                   .filter(movie -> movie.getImdbRating() >= imdbRating)
+                   .collect(Collectors.toList());
+
+           log.info("Movies are filtered by the imdb rating");
+       }
+
+
+       if (sortByImdbRating != null && sortByImdbRating) {
+           movieList = movieList
+                   .stream()
+                   .sorted((movie1, movie2) -> {
+                       double imdbRating1 = movie1.getImdbRating();
+                       double imdbRating2 = movie2.getImdbRating();
+
+                       if (descendingByImdbRating != null && descendingByImdbRating) {
+                           return Double.compare(imdbRating2, imdbRating1);
+                       } else {
+                           return Double.compare(imdbRating1, imdbRating2);
+                       }
+                   })
+                   .collect(Collectors.toList());
+
+           log.info("Movies are sorted");
+       }
+
+       if (StringUtils.isNoneBlank(title)) {
+           movieList = movieList
+                   .stream()
+                   .filter(movie -> movie.getTitle().equals(title))
+                   .collect(Collectors.toList());
+
+           log.info("Movie search is searched");
+       }
+
+        return movieList
                 .stream()
                 .map(converter::convert)
                 .collect(Collectors.toList());
@@ -70,6 +130,8 @@ public class MovieServiceImpl implements MovieService {
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFound("Movie " + id + " is not found"));
 
+        log.info("Movie is fetched from the database");
+
         return converter.convert(movieInDb);
     }
 
@@ -78,10 +140,6 @@ public class MovieServiceImpl implements MovieService {
         Movie movieInDb = repository
                 .findById(id)
                 .orElseThrow(() -> new EntityNotFound("Movie " + id + " is not found"));
-
-        if (movieInDb.getType() == Type.SERIES) {
-            movieInDb.setTotalSeasons(movieDto.getTotalSeasons());
-        }
 
         movieInDb.setTitle(movieDto.getTitle());
         movieInDb.setYear(movieDto.getYear());
@@ -102,11 +160,24 @@ public class MovieServiceImpl implements MovieService {
         movieInDb.setPosterUrl(movieDto.getPosterUrl());
         movieInDb.setMetascore(movieDto.getMetascore());
 
-        return converter.convert(repository.save(movieInDb));
+        if (movieInDb.getType() == Type.SERIES) {
+            movieInDb.setTotalSeasons(movieDto.getTotalSeasons());
+        } else {
+            movieInDb.setTotalSeasons(null);
+        }
+
+        Movie savedMovie = repository.save(movieInDb);
+        log.info("Movie is updated");
+
+        return converter.convert(savedMovie);
     }
 
     @Override
-    public String deleteMovie(String id) {
-        return repository.deleteById(id);
+    public void deleteMovie(String id) {
+        if (!repository.existsById(id)) {
+            throw new EntityNotFound("Item" + id + " is not found");
+        }
+
+        repository.deleteById(id);
     }
 }
