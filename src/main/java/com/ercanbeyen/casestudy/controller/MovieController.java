@@ -28,10 +28,12 @@ public class MovieController {
             @RequestParam(required = false) Type type,
             @RequestParam(required = false) String director,
             @RequestParam(required = false) Double imdbRating,
-            @RequestParam(required = false) Boolean sort,
-            @RequestParam(required = false) Boolean descending,
+            @RequestParam(required = false) Boolean sortByImdbRating,
+            @RequestParam(required = false) Boolean descendingByImdbRating,
+            @RequestParam(required = false) Integer limit,
+            @RequestBody List<String> languages,
             @RequestParam(required = false) String title) {
-        List<MovieDto> movieList = movieService.getMovies(type, director, imdbRating, sort, descending, title);
+        List<MovieDto> movieList = movieService.getMovies(type, director, imdbRating, sortByImdbRating, descendingByImdbRating, limit, languages, title);
         return ResponseEntity.ok(movieList);
     }
 
