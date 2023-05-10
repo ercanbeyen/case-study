@@ -15,7 +15,6 @@ import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.List;
 
-// TODO: Add some additional validations like @Min(0), @Max(100) or something else
 
 @Data
 @Builder
