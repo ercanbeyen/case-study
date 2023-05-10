@@ -45,7 +45,7 @@ public class MovieDto {
     @Min(0)
     private Double imdbRating;
     @Min(0)
-    private Double imdbVotes;
+    private Integer imdbVotes;
     @Enumerated(EnumType.STRING)
     private Type type;
     private Boolean comingSoon;

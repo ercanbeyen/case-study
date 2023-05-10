@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface MovieService {
     MovieDto addMovie(MovieDto movie);
-    List<MovieDto> getMovies(Type type, String director, Double imdbRating, Boolean sort,  Boolean descending, String title);
+    List<MovieDto> getMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, List<String> languages, String title);
     MovieDto getMovie(String id);
     MovieDto updateMovie(String id, MovieDto movie);
     void deleteMovie(String id);

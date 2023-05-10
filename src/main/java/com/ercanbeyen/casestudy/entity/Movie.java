@@ -35,7 +35,7 @@ public class Movie implements Serializable {
     private String posterUrl;
     private Integer metascore;
     private Double imdbRating;
-    private Double imdbVotes;
+    private Integer imdbVotes;
     @Enumerated(EnumType.STRING)
     private Type type;
     private Boolean comingSoon;

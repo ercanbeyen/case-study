@@ -88,7 +88,7 @@ public class FileHandler {
         List<String> countryList = Arrays.asList(countryArray);
 
         String awards = (String) jsonObject.get("Awards");
-        String posterUrl = (String) jsonObject.get("url");
+        String posterUrl = (String) jsonObject.get("Poster");
 
         String metascore_string = (String) jsonObject.get("Metascore");
         Integer metascore = MovieUtils.handleInteger(metascore_string);
@@ -96,8 +96,9 @@ public class FileHandler {
         String imdbRating_string = (String) jsonObject.get("imdbRating");
         Double imdbRating = MovieUtils.handleDouble(imdbRating_string);
 
-        String imdbVotes_string = (String) jsonObject.get("imdbRating");
-        Double imdbVotes = MovieUtils.handleDouble(imdbVotes_string);
+        String imdbVotes_string = (String) jsonObject.get("imdbVotes");
+        imdbVotes_string = imdbVotes_string.replaceAll(",", "");
+        Integer imdbVotes = MovieUtils.handleInteger(imdbVotes_string);
 
         String type_string = (String) jsonObject.get("Type");
         Type type = Type.getTypeByUpperCaseName(type_string);

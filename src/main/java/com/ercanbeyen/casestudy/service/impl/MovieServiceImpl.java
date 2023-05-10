@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public List<MovieDto> getMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, String title) {
+    public List<MovieDto> getMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, List<String> languages, String title) {
         List<Movie> movieList = repository.findAll();
         log.info("Movies are fetched from the database");
 
@@ -84,7 +85,7 @@ public class MovieServiceImpl implements MovieService {
        if (imdbRating != null) {
            movieList = movieList
                    .stream()
-                   .filter(movie -> movie.getImdbRating() >= imdbRating)
+                   .filter(movie -> movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating)
                    .collect(Collectors.toList());
 
            log.info("Movies are filtered by the imdb rating");
@@ -107,7 +108,34 @@ public class MovieServiceImpl implements MovieService {
                    .collect(Collectors.toList());
 
            log.info("Movies are sorted");
+
+           if (limit != null) {
+               movieList = movieList
+                       .stream()
+                       .limit(limit)
+                       .collect(Collectors.toList());
+
+               log.info("Top {} movie are selected", limit);
+           }
        }
+
+        /* Fetch all movies which contain at least one of the language from the languages list */
+        if (languages != null && languages.size() > 0) {
+            List<Movie> updatedMovieList = new ArrayList<>();
+            for (String language : languages) {
+                for (Movie movie: movieList) {
+                    for (String languageInMovie : movie.getLanguages()) {
+                        if (languageInMovie.equals(language)) {
+                            updatedMovieList.add(movie);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            movieList = updatedMovieList;
+            log.info("Movies are filtered by languages");
+        }
 
        if (StringUtils.isNoneBlank(title)) {
            movieList = movieList
