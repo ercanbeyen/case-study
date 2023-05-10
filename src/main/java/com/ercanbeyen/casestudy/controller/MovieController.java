@@ -2,7 +2,6 @@ package com.ercanbeyen.casestudy.controller;
 
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
-import com.ercanbeyen.casestudy.entity.Movie;
 import com.ercanbeyen.casestudy.service.MovieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -28,11 +27,11 @@ public class MovieController {
     public ResponseEntity<Object> getMovies(
             @RequestParam(required = false) Type type,
             @RequestParam(required = false) String director,
-            @RequestParam(required = false) Double lowestImdbRating,
+            @RequestParam(required = false) Double imdbRating,
             @RequestParam(required = false) Boolean sort,
             @RequestParam(required = false) Boolean descending,
             @RequestParam(required = false) String title) {
-        List<MovieDto> movieList = movieService.getMovies(type, director, lowestImdbRating, sort, descending, title);
+        List<MovieDto> movieList = movieService.getMovies(type, director, imdbRating, sort, descending, title);
         return ResponseEntity.ok(movieList);
     }
 

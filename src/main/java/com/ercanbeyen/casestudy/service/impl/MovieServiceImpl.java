@@ -84,7 +84,12 @@ public class MovieServiceImpl implements MovieService {
        if (imdbRating != null) {
            movieList = movieList
                    .stream()
-                   .filter(movie -> movie.getImdbRating() >= imdbRating)
+                   /*.filter(movie ->
+                           Double.compare(movie.getImdbRating(), imdbRating) == 0
+                           || Double.compare(movie.getImdbRating(), imdbRating) > 0
+                   )*/
+                   .filter(movie -> movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating)
+                   //.filter(movie -> movie.getImdbRating() >= imdbRating)
                    .collect(Collectors.toList());
 
            log.info("Movies are filtered by the imdb rating");

@@ -11,7 +11,7 @@ public class MovieDtoConverter {
                 .imdbID(movie.getImdbID())
                 .title(movie.getTitle())
                 .year(movie.getYear())
-                .rated(movie.getYear())
+                .rated(movie.getRated())
                 .released(movie.getReleased())
                 .languages(movie.getLanguages())
                 .runtime(movie.getRuntime())
