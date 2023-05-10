@@ -96,8 +96,14 @@ public class FileHandler {
         String imdbRating_string = (String) jsonObject.get("imdbRating");
         Double imdbRating = MovieUtils.handleDouble(imdbRating_string);
 
-        String imdbVotes_string = (String) jsonObject.get("imdbRating");
-        Double imdbVotes = MovieUtils.handleDouble(imdbVotes_string);
+        String imdbVotes_string = (String) jsonObject.get("imdbVotes");
+        imdbVotes_string = imdbVotes_string.replaceAll(",", "");
+        /*StringBuilder stringBuilder_imdbVotes = new StringBuilder();
+        int commaIndex = imdbVotes_string.indexOf(",");
+        stringBuilder_imdbVotes.append(imdbVotes_string, 0, commaIndex);
+        stringBuilder_imdbVotes.append(imdbVotes_string.substring(commaIndex + 1));
+        Integer imdbVotes = MovieUtils.handleInteger(stringBuilder_imdbVotes.toString());*/
+        Integer imdbVotes = MovieUtils.handleInteger(imdbVotes_string);
 
         String type_string = (String) jsonObject.get("Type");
         Type type = Type.getTypeByUpperCaseName(type_string);
