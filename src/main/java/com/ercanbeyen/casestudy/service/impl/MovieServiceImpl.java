@@ -26,7 +26,7 @@ public class MovieServiceImpl implements MovieService {
         String id = movieDto.getImdbID();
 
         if (repository.existsById(id)) {
-            //throw new EntityAlreadyExist("Movie " + id + " already exists");
+            throw new EntityAlreadyExist("Movie " + id + " already exists");
         }
 
         Movie movie = Movie.builder()
