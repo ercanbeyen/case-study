@@ -24,7 +24,7 @@ public class MovieServiceImpl implements MovieService {
     private final InMemoryMovieRepository repository;
     private final MovieDtoConverter converter;
     @Override
-    public MovieDto addMovie(MovieDto movieDto) {
+    public MovieDto createMovie(MovieDto movieDto) {
         String id = movieDto.getImdbID();
 
         if (repository.existsById(id)) {
