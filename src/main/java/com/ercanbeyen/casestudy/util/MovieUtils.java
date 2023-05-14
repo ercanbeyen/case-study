@@ -8,6 +8,9 @@ import java.util.Locale;
 
 public class MovieUtils {
     private static final String N_A = "N/A";
+
+    private MovieUtils() {}
+
     public static Integer handleInteger(String label) {
         return label.equals(N_A) ? null : Integer.parseInt(label);
     }

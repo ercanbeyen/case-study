@@ -1,7 +1,5 @@
 package com.ercanbeyen.casestudy.constant;
 
-import com.ercanbeyen.casestudy.util.StringClearUtils;
-
 import java.util.Locale;
 
 public enum Genre {
@@ -31,7 +29,6 @@ public enum Genre {
         }
 
         name = name.toUpperCase(Locale.ENGLISH);
-        //name = StringClearUtils.clearTurkishChars(name.toUpperCase());
         return Genre.valueOf(name);
     }
 }
