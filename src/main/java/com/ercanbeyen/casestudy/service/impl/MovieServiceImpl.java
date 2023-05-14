@@ -1,5 +1,6 @@
 package com.ercanbeyen.casestudy.service.impl;
 
+import com.ercanbeyen.casestudy.constant.Message;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
@@ -28,7 +29,7 @@ public class MovieServiceImpl implements MovieService {
         String id = movieDto.getImdbID();
 
         if (repository.existsById(id)) {
-            throw new EntityAlreadyExist("Movie " + id + " already exists");
+            throw new EntityAlreadyExist(String.format(Message.ALREADY_EXIST, id));
         }
 
         Movie movie = Movie.builder()
@@ -62,89 +63,12 @@ public class MovieServiceImpl implements MovieService {
         List<Movie> movieList = repository.findAll();
         log.info("Movies are fetched from the database");
 
-        if (type != null) {
-            movieList = movieList
-                    .stream()
-                    .filter(movie -> movie.getType() == type)
-                    .collect(Collectors.toList());
-
-            log.info("Movies are filtered by type");
-        }
-
-
-       if (!StringUtils.isBlank(director)) {
-           movieList = movieList
-                   .stream()
-                   .filter(movie -> movie.getDirector().equals(director))
-                   .collect(Collectors.toList());
-
-           log.info("Movies are filtered by director");
-       }
-
-
-       if (imdbRating != null) {
-           movieList = movieList
-                   .stream()
-                   .filter(movie -> movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating)
-                   .collect(Collectors.toList());
-
-           log.info("Movies are filtered by the imdb rating");
-       }
-
-
-       if (sortByImdbRating != null && sortByImdbRating) {
-           movieList = movieList
-                   .stream()
-                   .sorted((movie1, movie2) -> {
-                       double imdbRating1 = movie1.getImdbRating();
-                       double imdbRating2 = movie2.getImdbRating();
-
-                       if (descendingByImdbRating != null && descendingByImdbRating) {
-                           return Double.compare(imdbRating2, imdbRating1);
-                       } else {
-                           return Double.compare(imdbRating1, imdbRating2);
-                       }
-                   })
-                   .collect(Collectors.toList());
-
-           log.info("Movies are sorted");
-
-           if (limit != null) {
-               movieList = movieList
-                       .stream()
-                       .limit(limit)
-                       .collect(Collectors.toList());
-
-               log.info("Top {} movie are selected", limit);
-           }
-       }
-
-        /* Fetch all movies which contain at least one of the language from the languages list */
-        if (languages != null && languages.size() > 0) {
-            List<Movie> updatedMovieList = new ArrayList<>();
-            for (String language : languages) {
-                for (Movie movie: movieList) {
-                    for (String languageInMovie : movie.getLanguages()) {
-                        if (languageInMovie.equals(language)) {
-                            updatedMovieList.add(movie);
-                            break;
-                        }
-                    }
-                }
-            }
-
-            movieList = updatedMovieList;
-            log.info("Movies are filtered by languages");
-        }
-
-       if (StringUtils.isNoneBlank(title)) {
-           movieList = movieList
-                   .stream()
-                   .filter(movie -> movie.getTitle().equals(title))
-                   .collect(Collectors.toList());
-
-           log.info("Movie search is searched");
-       }
+        movieList = filterByType(type, movieList);
+        movieList = filterByDirector(director, movieList);
+        movieList = filterByImdbRating(imdbRating, movieList);
+        movieList = sortByImdbRating(sortByImdbRating, descendingByImdbRating, limit, movieList);
+        movieList = filterByLanguage(languages, movieList);
+        movieList = filterByTitle(title, movieList);
 
         return movieList
                 .stream()
@@ -156,7 +80,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieDto getMovie(String id) {
         Movie movieInDb = repository
                 .findById(id)
-                .orElseThrow(() -> new EntityNotFound("Movie " + id + " is not found"));
+                .orElseThrow(() -> new EntityNotFound(String.format(Message.NOT_FOUND, id)));
 
         log.info("Movie is fetched from the database");
 
@@ -167,7 +91,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieDto updateMovie(String id, MovieDto movieDto) {
         Movie movieInDb = repository
                 .findById(id)
-                .orElseThrow(() -> new EntityNotFound("Movie " + id + " is not found"));
+                .orElseThrow(() -> new EntityNotFound(String.format(Message.NOT_FOUND, id)));
 
         movieInDb.setTitle(movieDto.getTitle());
         movieInDb.setYear(movieDto.getYear());
@@ -203,9 +127,117 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void deleteMovie(String id) {
         if (!repository.existsById(id)) {
-            throw new EntityNotFound("Item" + id + " is not found");
+            throw new EntityNotFound(String.format(Message.NOT_FOUND, id));
         }
 
         repository.deleteById(id);
+    }
+
+    private List<Movie> filterByType(Type type, List<Movie> movieList) {
+        if (type != null) {
+            movieList = movieList
+                    .stream()
+                    .filter(movie -> movie.getType() == type)
+                    .collect(Collectors.toList());
+
+            log.info("Movies are filtered by type");
+        }
+
+        return movieList;
+    }
+
+    private List<Movie> filterByDirector(String director, List<Movie> movieList) {
+        if (!StringUtils.isBlank(director)) {
+            movieList = movieList
+                    .stream()
+                    .filter(movie -> movie.getDirector().equals(director))
+                    .collect(Collectors.toList());
+
+            log.info("Movies are filtered by director");
+        }
+
+        return movieList;
+    }
+
+    private List<Movie> filterByImdbRating(Double imdbRating, List<Movie> movieList) {
+        if (imdbRating != null) {
+            movieList = movieList
+                    .stream()
+                    .filter(movie -> movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating)
+                    .collect(Collectors.toList());
+
+            log.info("Movies are filtered by the imdb rating");
+        }
+
+        return movieList;
+    }
+
+    private List<Movie> sortByImdbRating(Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, List<Movie> movieList) {
+        if (sortByImdbRating != null && sortByImdbRating) {
+            movieList = movieList
+                    .stream()
+                    .sorted((movie1, movie2) -> {
+                        double imdbRating1 = movie1.getImdbRating();
+                        double imdbRating2 = movie2.getImdbRating();
+
+                        if (descendingByImdbRating != null && descendingByImdbRating) {
+                            return Double.compare(imdbRating2, imdbRating1);
+                        } else {
+                            return Double.compare(imdbRating1, imdbRating2);
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            log.info("Movies are sorted");
+
+            if (limit != null) {
+                movieList = movieList
+                        .stream()
+                        .limit(limit)
+                        .collect(Collectors.toList());
+
+                log.info("Top {} movie are selected", limit);
+            }
+        }
+
+        return movieList;
+    }
+
+    private List<Movie> filterByLanguage(List<String> languages, List<Movie> movieList) {
+        if (languages == null || languages.isEmpty()) {
+             return movieList;
+        }
+
+        /* Fetch all movies which contain at least one of the language from the languages list */
+        List<Movie> updatedMovieList = new ArrayList<>();
+
+        for (String language : languages) {
+            for (Movie movie : movieList) {
+                for (String languageInMovie : movie.getLanguages()) {
+                    if (languageInMovie.equals(language)) {
+                        updatedMovieList.add(movie);
+                        break;
+                    }
+                }
+            }
+        }
+
+        movieList = updatedMovieList;
+        log.info("Movies are filtered by languages");
+
+        return movieList;
+    }
+
+    private List<Movie> filterByTitle(String title, List<Movie> movieList) {
+        if (StringUtils.isNoneBlank(title)) {
+            movieList = movieList
+                    .stream()
+                    .filter(movie -> movie.getTitle().equals(title))
+                    .collect(Collectors.toList());
+
+            log.info("Movie search is searched");
+        }
+
+        return movieList;
     }
 }
