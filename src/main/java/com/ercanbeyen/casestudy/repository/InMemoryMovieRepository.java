@@ -1,7 +1,6 @@
 package com.ercanbeyen.casestudy.repository;
 
 import com.ercanbeyen.casestudy.entity.Movie;
-import com.ercanbeyen.casestudy.exception.EntityNotFound;
 import com.ercanbeyen.casestudy.util.FileHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +14,7 @@ import java.util.Optional;
 @Slf4j
 @Component
 public class InMemoryMovieRepository implements CommandLineRunner {
-    private static List<Movie> movieList;
+    private List<Movie> movieList;
 
     @Override
     public void run(String... args) throws Exception {
@@ -27,13 +26,10 @@ public class InMemoryMovieRepository implements CommandLineRunner {
     }
 
     public List<Movie> findAll() {
-        //movieList = FileHandler.readFile();
         return movieList;
     }
 
     public Optional<Movie> findById(String id) {
-        //movieList = FileHandler.readFile();
-
         return movieList.stream()
                 .filter(watchingItem -> watchingItem.getImdbID().equals(id))
                 .findFirst();
@@ -45,16 +41,17 @@ public class InMemoryMovieRepository implements CommandLineRunner {
         if (!existsById(id)) {
             movieList.add(movie);
         } else {
-            for (Movie movieInDb : movieList) {
-                if (movieInDb.getImdbID().equals(id)) {
-                    movieInDb = movie;
+            for (int i = 0; i < count(); i++) {
+                Movie current = movieList.get(i);
+
+                if (current.getImdbID().equals(id)) {
+                    movieList.set(i, movie);
                     break;
                 }
             }
         }
 
         FileHandler.writeFile(movieList);
-        //FileHandler.appendFile(movie);
         return movie;
     }
 

@@ -3,6 +3,7 @@ package com.ercanbeyen.casestudy.util;
 import com.ercanbeyen.casestudy.constant.Genre;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.entity.Movie;
+import com.ercanbeyen.casestudy.exception.FileNotHandled;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -17,15 +18,17 @@ import java.util.*;
 
 @Slf4j
 public class FileHandler {
-    private static final String filePath = "docs/MovieWebsiteJson.json";
+    private static final String FILE_PATH = "docs/MovieWebsiteJson.json";
     private static final String N_A = "N/A";
+
+    private FileHandler() {}
 
     public static List<Movie> readFile() {
         List<Movie> list = new ArrayList<>();
 
         try {
             JSONParser jsonParser = new JSONParser();
-            FileReader fileReader = new FileReader(filePath);
+            FileReader fileReader = new FileReader(FILE_PATH);
             Object parsedObject = jsonParser.parse(fileReader);
             JSONArray jsonArray = (JSONArray) parsedObject;
             
@@ -38,7 +41,7 @@ public class FileHandler {
             fileReader.close();
             return list;
         } catch (ParseException | IOException exception) {
-            throw new RuntimeException(exception.getMessage());
+            throw new FileNotHandled(exception.getMessage());
         }
     }
 
@@ -51,70 +54,70 @@ public class FileHandler {
 
         String rated = (String) jsonObject.get("Rated");
 
-        String localDate_string = (String) jsonObject.get("Released");
-        LocalDate released = MovieUtils.handleLocalDate(localDate_string);
+        String localDateString = (String) jsonObject.get("Released");
+        LocalDate released = MovieUtils.handleLocalDate(localDateString);
 
-        String runtime_string = (String) jsonObject.get("Runtime");
-        Integer runtime = MovieUtils.handleInteger(runtime_string.split(" ")[0]);
+        String runtimeString = (String) jsonObject.get("Runtime");
+        Integer runtime = MovieUtils.handleInteger(runtimeString.split(" ")[0]);
 
-        String genre_string = (String) jsonObject.get("Genre");
-        String[] genre_strings = genre_string.split(", ");
+        String genreString = (String) jsonObject.get("Genre");
+        String[] genreStrings = genreString.split(", ");
 
         List<Genre> genreList = new ArrayList<>();
 
-        for (String genre : genre_strings) {
+        for (String genre : genreStrings) {
             Genre current = Genre.getGenreByUpperCaseName(genre);
             genreList.add(current);
         }
 
         String directorName = (String) jsonObject.get("Director");
 
-        String actors_string = (String) jsonObject.get("Actors");
-        String[] actorArray = actors_string.split(", ");
+        String actorsString = (String) jsonObject.get("Actors");
+        String[] actorArray = actorsString.split(", ");
         List<String> actorList = Arrays.asList(actorArray);
 
-        String writers_string = (String) jsonObject.get("Writer");
-        String[] writers_array = writers_string.split(", ");
-        List<String> writerList = Arrays.asList(writers_array);
+        String writersString = (String) jsonObject.get("Writer");
+        String[] writersArray = writersString.split(", ");
+        List<String> writerList = Arrays.asList(writersArray);
 
         String plot = (String) jsonObject.get("Plot");
 
-        String langauges_string = (String) jsonObject.get("Language");
-        String[] language_array = langauges_string.split(", ");
-        List<String> languageList = Arrays.asList(language_array);
+        String langaugesString = (String) jsonObject.get("Language");
+        String[] languageArray = langaugesString.split(", ");
+        List<String> languageList = Arrays.asList(languageArray);
 
-        String country_string = (String) jsonObject.get("Country");
-        String[] countryArray = country_string.split(", ");
+        String countryString = (String) jsonObject.get("Country");
+        String[] countryArray = countryString.split(", ");
         List<String> countryList = Arrays.asList(countryArray);
 
         String awards = (String) jsonObject.get("Awards");
         String posterUrl = (String) jsonObject.get("Poster");
 
-        String metascore_string = (String) jsonObject.get("Metascore");
-        Integer metascore = MovieUtils.handleInteger(metascore_string);
+        String metascoreString = (String) jsonObject.get("Metascore");
+        Integer metascore = MovieUtils.handleInteger(metascoreString);
 
-        String imdbRating_string = (String) jsonObject.get("imdbRating");
-        Double imdbRating = MovieUtils.handleDouble(imdbRating_string);
+        String imdbRatingString = (String) jsonObject.get("imdbRating");
+        Double imdbRating = MovieUtils.handleDouble(imdbRatingString);
 
-        String imdbVotes_string = (String) jsonObject.get("imdbVotes");
-        imdbVotes_string = imdbVotes_string.replaceAll(",", "");
-        Integer imdbVotes = MovieUtils.handleInteger(imdbVotes_string);
+        String imdbVotesString = (String) jsonObject.get("imdbVotes");
+        imdbVotesString = imdbVotesString.replace(",", "");
+        Integer imdbVotes = MovieUtils.handleInteger(imdbVotesString);
 
-        String type_string = (String) jsonObject.get("Type");
-        Type type = Type.getTypeByUpperCaseName(type_string);
+        String typeString = (String) jsonObject.get("Type");
+        Type type = Type.getTypeByUpperCaseName(typeString);
 
         Boolean comingSoon = null;
 
         if (jsonObject.get("ComingSoon") != null) {
-            String comingSoon_string = (String) jsonObject.get("imdbRating");
-            comingSoon = Boolean.parseBoolean(comingSoon_string);
+            String comingSoonString = (String) jsonObject.get("imdbRating");
+            comingSoon = Boolean.parseBoolean(comingSoonString);
         }
 
         Movie movie;
 
         if (type == Type.SERIES) {
-            String totalSeasons_string = (String) jsonObject.get("totalSeasons");
-            Integer totalSeasons = Integer.parseInt(totalSeasons_string);
+            String totalSeasonsString = (String) jsonObject.get("totalSeasons");
+            Integer totalSeasons = Integer.parseInt(totalSeasonsString);
 
             movie = Movie.builder()
                     .imdbID(imdbID)
@@ -170,7 +173,7 @@ public class FileHandler {
 
     public static void writeFile(List<Movie> list) {
         try {
-            FileWriter fileWriter = new FileWriter(filePath);
+            FileWriter fileWriter = new FileWriter(FILE_PATH);
             // Convert Movie to the particular data format
             List<JSONObject> jsonObjectList = new ArrayList<>();
 
@@ -183,19 +186,7 @@ public class FileHandler {
             fileWriter.flush();
             fileWriter.close();
         } catch (IOException exception) {
-            throw new RuntimeException(exception);
-        }
-    }
-
-    public static void appendFile(Movie movie) {
-        try {
-            FileWriter fileWriter = new FileWriter(filePath);
-            JSONObject jsonObject = convertToJSON(movie);
-            fileWriter.append(jsonObject.toJSONString());
-            fileWriter.flush();
-            fileWriter.close();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new FileNotHandled(exception.getMessage());
         }
     }
 
@@ -206,13 +197,10 @@ public class FileHandler {
         map.put("Rated", movie.getRated());
         LocalDate released = movie.getReleased();
 
-
-
         if (released == null) {
             map.put("Released", N_A);
         } else {
             int monthDay = released.getDayOfMonth();
-            //Month month = released.getMonth();
             String month = MovieUtils.getMonth(released.getMonthValue());
             int year = released.getYear();
             String releasedYear = monthDay + " " + month + " " + year;
@@ -220,92 +208,34 @@ public class FileHandler {
         }
 
         updateMap(movie.getRuntime(), map, "runtime");
-        StringBuilder runtime_value = new StringBuilder(map.get("runtime").toString());
+        StringBuilder runtimeValue = new StringBuilder(map.get("runtime").toString());
 
-        if (!runtime_value.toString().equals("N/A")) {
-            runtime_value.append(" min");
+        if (!runtimeValue.toString().equals("N/A")) {
+            runtimeValue.append(" min");
         }
 
-        map.put("Runtime", runtime_value.toString());
+        map.put("Runtime", runtimeValue.toString());
 
-        StringBuilder genre = new StringBuilder();
-        List<Genre> genreList = movie.getGenres();
+        String genre = convertToString(movie.getGenres());
+        map.put("Genre", genre);
 
-        for (int i = 0; i < genreList.size(); i++) {
-            Genre current = genreList.get(i);
-
-            genre.append(current);
-
-            if (i != movie.getGenres().size() - 1) {
-                genre.append(", ");
-            }
-        }
-
-        map.put("Genre", genre.toString());
         map.put("Director", movie.getDirector());
 
-        StringBuilder writer = new StringBuilder();
-        List<String> writerList = movie.getWriters();
+        String writer = convertToString(movie.getWriters());
+        map.put("Writer", writer);
 
-        for (int i = 0; i < writerList.size(); i++) {
-            String current = writerList.get(i);
+        String actors = convertToString(movie.getActors());
+        map.put("Actors", actors);
 
-            writer.append(current);
-
-            if (i != writerList.size() - 1) {
-                writer.append(", ");
-            }
-        }
-
-        map.put("Writer", writer.toString());
-
-        StringBuilder actors = new StringBuilder();
-        List<String> actorList = movie.getActors();
-
-        for (int i = 0; i < actorList.size(); i++) {
-            String current = actorList.get(i);
-
-            actors.append(current);
-
-            if (i != actorList.size() - 1) {
-                actors.append(", ");
-            }
-        }
-
-        map.put("Actors", actors.toString());
         map.put("Plot", movie.getPlot());
 
 
-        StringBuilder language = new StringBuilder();
-        List<String> languageList = movie.getLanguages();
-
-        for (int i = 0; i < languageList.size(); i++) {
-            String current = languageList.get(i);
-
-            language.append(current);
-
-            if (i != languageList.size() - 1) {
-                language.append(", ");
-            }
-        }
-
-        map.put("Language", language.toString());
+        String language = convertToString(movie.getLanguages());
+        map.put("Language", language);
 
 
-        StringBuilder country = new StringBuilder();
-        List<String> countryList = movie.getCountries();
-
-        for (int i = 0; i < countryList.size(); i++) {
-            String current = countryList.get(i);
-
-            country.append(current);
-
-            if (i != languageList.size() - 1) {
-                country.append(", ");
-            }
-        }
-
-        map.put("Country", country.toString());
+        String country = convertToString(movie.getCountries());
+        map.put("Country", country);
 
         map.put("Awards", movie.getAwards());
         map.put("Poster", movie.getPosterUrl());
@@ -322,6 +252,23 @@ public class FileHandler {
 
 
         return new JSONObject(map);
+    }
+
+    private static String convertToString(List<?> list) {
+        StringBuilder stringBuilder = new StringBuilder();
+        final int LIST_SIZE = list.size();
+
+        for (int i = 0; i < LIST_SIZE; i++) {
+            Object current = list.get(i);
+
+            stringBuilder.append(current);
+
+            if (i != LIST_SIZE - 1) {
+                stringBuilder.append(", ");
+            }
+        }
+
+        return stringBuilder.toString();
     }
 
     private static void updateMap(Object object, HashMap<String, Object> map, String key) {

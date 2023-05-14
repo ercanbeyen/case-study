@@ -4,6 +4,7 @@ package com.ercanbeyen.casestudy.exception.advise;
 import com.ercanbeyen.casestudy.exception.EntityAlreadyExist;
 import com.ercanbeyen.casestudy.exception.EntityNotFound;
 import com.ercanbeyen.casestudy.exception.ExceptionResponse;
+import com.ercanbeyen.casestudy.exception.FileNotHandled;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,14 +39,20 @@ public class ExceptionAdvisor extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(EntityNotFound.class)
-    public ResponseEntity<?> handleEntityNotFoundException(Exception exception) {
+    public ResponseEntity<Object> handleEntityNotFoundException(Exception exception) {
         ExceptionResponse response = new ExceptionResponse(HttpStatus.NOT_FOUND.value(), LocalDateTime.now(), exception.getMessage());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @ExceptionHandler(EntityAlreadyExist.class)
-    public ResponseEntity<?> handleEntityAlreadyExist(Exception exception) {
+    public ResponseEntity<Object> handleEntityAlreadyExist(Exception exception) {
         ExceptionResponse response = new ExceptionResponse(HttpStatus.CONFLICT.value(), LocalDateTime.now(), exception.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(FileNotHandled.class)
+    public  ResponseEntity<Object> handleFileNotHandledException(Exception exception) {
+        ExceptionResponse response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), LocalDateTime.now(), exception.getMessage());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }
