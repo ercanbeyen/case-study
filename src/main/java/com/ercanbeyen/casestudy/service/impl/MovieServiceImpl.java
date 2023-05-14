@@ -1,5 +1,6 @@
 package com.ercanbeyen.casestudy.service.impl;
 
+import com.ercanbeyen.casestudy.constant.Message;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
@@ -28,7 +29,7 @@ public class MovieServiceImpl implements MovieService {
         String id = movieDto.getImdbID();
 
         if (repository.existsById(id)) {
-            throw new EntityAlreadyExist("Movie " + id + " already exists");
+            throw new EntityAlreadyExist(String.format(Message.ALREADY_EXIST, id));
         }
 
         Movie movie = Movie.builder()
@@ -120,7 +121,7 @@ public class MovieServiceImpl implements MovieService {
        }
 
         /* Fetch all movies which contain at least one of the language from the languages list */
-        if (languages != null && languages.size() > 0) {
+        if (languages != null && !languages.isEmpty()) {
             List<Movie> updatedMovieList = new ArrayList<>();
             for (String language : languages) {
                 for (Movie movie: movieList) {
@@ -156,7 +157,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieDto getMovie(String id) {
         Movie movieInDb = repository
                 .findById(id)
-                .orElseThrow(() -> new EntityNotFound("Movie " + id + " is not found"));
+                .orElseThrow(() -> new EntityNotFound(String.format(Message.NOT_FOUND, id)));
 
         log.info("Movie is fetched from the database");
 
@@ -167,7 +168,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieDto updateMovie(String id, MovieDto movieDto) {
         Movie movieInDb = repository
                 .findById(id)
-                .orElseThrow(() -> new EntityNotFound("Movie " + id + " is not found"));
+                .orElseThrow(() -> new EntityNotFound(String.format(Message.NOT_FOUND, id)));
 
         movieInDb.setTitle(movieDto.getTitle());
         movieInDb.setYear(movieDto.getYear());
@@ -203,7 +204,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void deleteMovie(String id) {
         if (!repository.existsById(id)) {
-            throw new EntityNotFound("Item" + id + " is not found");
+            throw new EntityNotFound(String.format(Message.NOT_FOUND, id));
         }
 
         repository.deleteById(id);
