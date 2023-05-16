@@ -1,25 +1,20 @@
 package com.ercanbeyen.casestudy.repository;
 
-import com.ercanbeyen.casestudy.entity.Movie;
+import com.ercanbeyen.casestudy.document.Movie;
 import com.ercanbeyen.casestudy.util.FileHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 @RequiredArgsConstructor
 @Slf4j
 @Component
-public class InMemoryMovieRepository implements CommandLineRunner {
-    private List<Movie> movieList;
-
-    @Override
-    public void run(String... args) throws Exception {
-        movieList = FileHandler.readFile();
-    }
+public class InMemoryMovieRepository {
+    private final List<Movie> movieList = new ArrayList<>();
 
     public Long count() {
         return (long) movieList.size();
@@ -51,22 +46,22 @@ public class InMemoryMovieRepository implements CommandLineRunner {
             }
         }
 
-        FileHandler.writeFile(movieList);
+        FileHandler.write(movieList);
         return movie;
     }
 
     public void deleteById(String id) {
-        Optional<Movie> watchingItem = movieList.stream()
+        Optional<Movie> optionalMovie = movieList.stream()
                 .filter(item -> item.getImdbID().equals(id))
                 .findFirst();
 
-        watchingItem.ifPresent(movie -> movieList.remove(movie));
+        optionalMovie.ifPresent(movieList::remove);
 
         if (existsById(id)) {
             log.error("Movie {} is not deleted from the database", id);
         }
 
-        FileHandler.writeFile(movieList); // delete the object and rewrite the updated list into the file
+        FileHandler.write(movieList); // delete the object and rewrite the updated list into the file
     }
 
     public boolean existsById(String id) {

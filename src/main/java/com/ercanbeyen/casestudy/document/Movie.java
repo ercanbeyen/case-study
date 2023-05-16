@@ -1,10 +1,13 @@
-package com.ercanbeyen.casestudy.entity;
+package com.ercanbeyen.casestudy.document;
 
 import com.ercanbeyen.casestudy.constant.Genre;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.*;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.FieldType;
+import org.springframework.data.mongodb.core.mapping.MongoId;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -16,7 +19,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Document
 public class Movie implements Serializable {
+    @MongoId(FieldType.STRING)
     private String imdbID; // Primary Key
     private String title;
     private String year;
