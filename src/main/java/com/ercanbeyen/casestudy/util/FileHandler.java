@@ -2,7 +2,7 @@ package com.ercanbeyen.casestudy.util;
 
 import com.ercanbeyen.casestudy.constant.Genre;
 import com.ercanbeyen.casestudy.constant.Type;
-import com.ercanbeyen.casestudy.entity.Movie;
+import com.ercanbeyen.casestudy.document.Movie;
 import com.ercanbeyen.casestudy.exception.FileNotHandled;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
@@ -23,29 +23,27 @@ public class FileHandler {
 
     private FileHandler() {}
 
-    public static List<Movie> readFile() {
+    public static List<Movie> read() {
         List<Movie> list = new ArrayList<>();
 
-        try {
+        try (FileReader fileReader = new FileReader(FILE_PATH)) {
             JSONParser jsonParser = new JSONParser();
-            FileReader fileReader = new FileReader(FILE_PATH);
             Object parsedObject = jsonParser.parse(fileReader);
             JSONArray jsonArray = (JSONArray) parsedObject;
             
             for (Object object : jsonArray) {
                 JSONObject jsonObject = (JSONObject) object;
-                Movie movie = parseMovie(jsonObject);
+                Movie movie = parse(jsonObject);
                 list.add(movie);
             }
 
-            fileReader.close();
             return list;
         } catch (ParseException | IOException exception) {
             throw new FileNotHandled(exception.getMessage());
         }
     }
 
-    private static Movie parseMovie(JSONObject jsonObject) {
+    private static Movie parse(JSONObject jsonObject) {
         String imdbID = (String) jsonObject.get("imdbID");
 
         String title = (String) jsonObject.get("Title");
@@ -171,9 +169,8 @@ public class FileHandler {
         return movie;
     }
 
-    public static void writeFile(List<Movie> list) {
-        try {
-            FileWriter fileWriter = new FileWriter(FILE_PATH);
+    public static void write(List<Movie> list) {
+        try (FileWriter fileWriter = new FileWriter(FILE_PATH)) {
             // Convert Movie to the particular data format
             List<JSONObject> jsonObjectList = new ArrayList<>();
 
@@ -184,7 +181,6 @@ public class FileHandler {
 
             fileWriter.write(jsonObjectList.toString()); // Overwrite the file
             fileWriter.flush();
-            fileWriter.close();
         } catch (IOException exception) {
             throw new FileNotHandled(exception.getMessage());
         }

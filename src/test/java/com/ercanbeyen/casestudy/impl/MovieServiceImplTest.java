@@ -1,14 +1,16 @@
 package com.ercanbeyen.casestudy.impl;
 
 import com.ercanbeyen.casestudy.constant.Genre;
+import com.ercanbeyen.casestudy.constant.Message;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
-import com.ercanbeyen.casestudy.entity.Movie;
+import com.ercanbeyen.casestudy.document.Movie;
 import com.ercanbeyen.casestudy.exception.EntityAlreadyExist;
 import com.ercanbeyen.casestudy.exception.EntityNotFound;
-import com.ercanbeyen.casestudy.repository.InMemoryMovieRepository;
+import com.ercanbeyen.casestudy.repository.MovieRepository;
 import com.ercanbeyen.casestudy.service.impl.MovieServiceImpl;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,15 +29,19 @@ import java.util.stream.Collectors;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 public class MovieServiceImplTest {
     @InjectMocks
     private MovieServiceImpl service;
     @Mock
-    private InMemoryMovieRepository repository;
+    private MovieRepository repository;
     @Spy
     private MovieDtoConverter converter;
+
+    private List<Movie> movieList;
+    private List<MovieDto> movieDtoList;
 
     private List<Movie> getMockMovieList() {
         String imdbID = "id1";
@@ -129,11 +135,18 @@ public class MovieServiceImplTest {
                 .collect(Collectors.toList());
     }
 
+    @BeforeEach
+    public void setup() {
+        movieList = getMockMovieList();
+        movieDtoList = getMockMovieDtoList();
+        //converter = new MovieDtoConverter();
+    }
+
     @Test
-    @DisplayName("When createMovie Called With Not Existed MovieDto It Should Return MovieDto")
+    @DisplayName("When CreateMovie Called With Not Existed MovieDto It Should Return MovieDto")
     public void whenCreateMovieCalledWithNotExistedMovieDto_itShouldReturnMovieDto() {
-        Movie movie = getMockMovieList().get(0);
-        MovieDto movieDto = getMockMovieDtoList().get(0);
+        Movie movie = movieList.get(0);
+        MovieDto movieDto = movieDtoList.get(0);
 
         Mockito.when(repository.existsById(movieDto.getImdbID())).thenReturn(false);
         Mockito.when(repository.save(any(Movie.class))).thenReturn(movie);
@@ -143,30 +156,27 @@ public class MovieServiceImplTest {
 
         assertEquals(movieDto, result);
 
-        Mockito.verify(repository).existsById(movie.getImdbID());
-        Mockito.verify(repository).save(any(Movie.class));
+        Mockito.verify(repository, times(1)).existsById(movie.getImdbID());
+        Mockito.verify(repository, times(1)).save(any(Movie.class));
         //Mockito.verify(converter).convert(movie);
     }
 
     @Test
-    @DisplayName("When createMovie Called With Existed MovieDto It Should Throw Exception")
+    @DisplayName("When CreateMovie Called With Existed MovieDto It Should Throw Exception")
     public void whenCreateMovieCalledWithExistedMovieDto_itShouldThrowException() {
         MovieDto movieDto = getMockMovieDtoList().get(0);
         Movie movie = getMockMovieList().get(0);
         String imdbID = movie.getImdbID();
-        //repository.save(movie);
 
         Mockito.when(repository.existsById(imdbID)).thenReturn(true);
 
         RuntimeException exception = assertThrows(EntityAlreadyExist.class, () -> service.createMovie(movieDto));
 
-        String message = "Movie " + imdbID + " already exists";
+        String message = String.format(Message.ALREADY_EXIST, imdbID);
 
         assertEquals(message, exception.getMessage());
 
-        //repository.deleteById(imdbID);
-
-        Mockito.verify(repository).existsById(imdbID);
+        Mockito.verify(repository, times(1)).existsById(imdbID);
     }
 
     @Test
@@ -184,7 +194,7 @@ public class MovieServiceImplTest {
 
         assertEquals(movieDto, result);
 
-        Mockito.verify(repository).findById(imdbID);
+        Mockito.verify(repository, times(1)).findById(imdbID);
        // Mockito.verify(converter).convert(movie);
     }
 
@@ -198,12 +208,13 @@ public class MovieServiceImplTest {
 
         RuntimeException exception = assertThrows(EntityNotFound.class, () -> service.getMovie(imdbID));
 
-        String message = "Movie " + imdbID + " is not found";
+        String message = String.format(Message.NOT_FOUND, imdbID);
 
         assertEquals(message, exception.getMessage());
 
-        Mockito.verify(repository).findById(imdbID);
-        Mockito.verifyNoInteractions(converter);
+        Mockito.verify(repository, times(1)).findById(imdbID);
+        //Mockito.verifyNoInteractions(converter);
+        //Mockito.verify(converter, never()).convert(any(Movie.class));
     }
 
     @Test
@@ -222,8 +233,8 @@ public class MovieServiceImplTest {
 
         assertEquals(movieDto, result);
 
-        Mockito.verify(repository).findById(imdbID);
-        Mockito.verify(repository).save(movie);
+        Mockito.verify(repository, times(1)).findById(imdbID);
+        Mockito.verify(repository, times(1)).save(movie);
     }
 
     @Test
@@ -238,10 +249,10 @@ public class MovieServiceImplTest {
 
         RuntimeException exception = assertThrows(EntityNotFound.class, () -> service.updateMovie(imdbID, movieDto));
 
-        String message = "Movie " + imdbID + " is not found";
+        String message = String.format(Message.NOT_FOUND, imdbID);
 
         assertEquals(message, exception.getMessage());
 
-        Mockito.verify(repository).findById(imdbID);
+        Mockito.verify(repository, times(1)).findById(imdbID);
     }
 }

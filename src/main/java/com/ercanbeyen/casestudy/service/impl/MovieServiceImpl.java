@@ -4,10 +4,10 @@ import com.ercanbeyen.casestudy.constant.Message;
 import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
-import com.ercanbeyen.casestudy.entity.Movie;
+import com.ercanbeyen.casestudy.document.Movie;
 import com.ercanbeyen.casestudy.exception.EntityAlreadyExist;
 import com.ercanbeyen.casestudy.exception.EntityNotFound;
-import com.ercanbeyen.casestudy.repository.InMemoryMovieRepository;
+import com.ercanbeyen.casestudy.repository.MovieRepository;
 import com.ercanbeyen.casestudy.service.MovieService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class MovieServiceImpl implements MovieService {
-    private final InMemoryMovieRepository repository;
+    //private final InMemoryMovieRepository repository;
+    private final MovieRepository repository;
     private final MovieDtoConverter converter;
     @Override
     public MovieDto createMovie(MovieDto movieDto) {
