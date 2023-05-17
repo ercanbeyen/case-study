@@ -9,6 +9,7 @@ import com.ercanbeyen.casestudy.exception.EntityAlreadyExist;
 import com.ercanbeyen.casestudy.exception.EntityNotFound;
 import com.ercanbeyen.casestudy.repository.MovieRepository;
 import com.ercanbeyen.casestudy.service.MovieService;
+import com.ercanbeyen.casestudy.util.FileHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -22,9 +23,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class MovieServiceImpl implements MovieService {
-    //private final InMemoryMovieRepository repository;
     private final MovieRepository repository;
     private final MovieDtoConverter converter;
+    private FileHandler fileHandler;
     @Override
     public MovieDto createMovie(MovieDto movieDto) {
         String id = movieDto.getImdbID();
@@ -37,7 +38,7 @@ public class MovieServiceImpl implements MovieService {
                 .imdbID(movieDto.getImdbID())
                 .title(movieDto.getTitle())
                 .year(movieDto.getYear())
-                .rated(movieDto.getYear())
+                .rated(movieDto.getRated())
                 .released(movieDto.getReleased())
                 .languages(movieDto.getLanguages())
                 .runtime(movieDto.getRuntime())
@@ -109,7 +110,6 @@ public class MovieServiceImpl implements MovieService {
         movieInDb.setWriters(movieInDb.getWriters());
         movieInDb.setImdbRating(movieInDb.getImdbRating());
         movieInDb.setImdbVotes(movieDto.getImdbVotes());
-        movieInDb.setImdbVotes(movieDto.getImdbVotes());
         movieInDb.setPosterUrl(movieDto.getPosterUrl());
         movieInDb.setMetascore(movieDto.getMetascore());
 
@@ -132,6 +132,23 @@ public class MovieServiceImpl implements MovieService {
         }
 
         repository.deleteById(id);
+    }
+
+    @Override
+    public String restoreDatabase() {
+        if (repository.count() > 0) {
+            log.info("Repository is empty");
+            repository.deleteAll();
+        }
+
+        log.info("Before read");
+
+        List<Movie> movieList = FileHandler.read();
+        log.info("File is read");
+
+        repository.saveAll(movieList);
+
+        return "Database is restored";
     }
 
     private List<Movie> filterByType(Type type, List<Movie> movieList) {
