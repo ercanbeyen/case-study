@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class MovieServiceImpl implements MovieService {
-    //private final InMemoryMovieRepository repository;
     private final MovieRepository repository;
     private final MovieDtoConverter converter;
     @Override
