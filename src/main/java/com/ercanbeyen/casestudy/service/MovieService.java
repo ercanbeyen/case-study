@@ -11,4 +11,5 @@ public interface MovieService {
     MovieDto getMovie(String id);
     MovieDto updateMovie(String id, MovieDto movie);
     void deleteMovie(String id);
+    String restoreDatabase();
 }

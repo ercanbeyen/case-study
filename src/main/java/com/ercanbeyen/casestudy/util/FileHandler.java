@@ -18,7 +18,7 @@ import java.util.*;
 
 @Slf4j
 public class FileHandler {
-    private static final String FILE_PATH = "docs/MovieWebsiteJson.json";
+    private static final String FILE_PATH = "MovieWebsiteJson.json";
     private static final String N_A = "N/A";
 
     private FileHandler() {}
