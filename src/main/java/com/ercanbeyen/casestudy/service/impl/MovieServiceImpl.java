@@ -5,8 +5,8 @@ import com.ercanbeyen.casestudy.constant.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
 import com.ercanbeyen.casestudy.document.Movie;
-import com.ercanbeyen.casestudy.exception.EntityAlreadyExist;
-import com.ercanbeyen.casestudy.exception.EntityNotFound;
+import com.ercanbeyen.casestudy.exception.EntityAlreadyExistException;
+import com.ercanbeyen.casestudy.exception.EntityNotFoundException;
 import com.ercanbeyen.casestudy.repository.MovieRepository;
 import com.ercanbeyen.casestudy.service.MovieService;
 import com.ercanbeyen.casestudy.util.FileHandler;
@@ -15,7 +15,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -25,13 +24,13 @@ import java.util.stream.Collectors;
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository repository;
     private final MovieDtoConverter converter;
-    private FileHandler fileHandler;
+
     @Override
     public MovieDto createMovie(MovieDto movieDto) {
         String id = movieDto.getImdbID();
 
         if (repository.existsById(id)) {
-            throw new EntityAlreadyExist(String.format(Message.ALREADY_EXIST, id));
+            throw new EntityAlreadyExistException(String.format(Message.ALREADY_EXIST, id));
         }
 
         Movie movie = Movie.builder()
@@ -61,7 +60,7 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public List<MovieDto> getMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, List<String> languages, String title) {
+    public List<MovieDto> getMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, String title) {
         List<Movie> movieList = repository.findAll();
         log.info("Movies are fetched from the database");
 
@@ -69,7 +68,6 @@ public class MovieServiceImpl implements MovieService {
         movieList = filterByDirector(director, movieList);
         movieList = filterByImdbRating(imdbRating, movieList);
         movieList = sortByImdbRating(sortByImdbRating, descendingByImdbRating, limit, movieList);
-        movieList = filterByLanguage(languages, movieList);
         movieList = filterByTitle(title, movieList);
 
         return movieList
@@ -82,7 +80,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieDto getMovie(String id) {
         Movie movieInDb = repository
                 .findById(id)
-                .orElseThrow(() -> new EntityNotFound(String.format(Message.NOT_FOUND, id)));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
 
         log.info("Movie is fetched from the database");
 
@@ -93,7 +91,7 @@ public class MovieServiceImpl implements MovieService {
     public MovieDto updateMovie(String id, MovieDto movieDto) {
         Movie movieInDb = repository
                 .findById(id)
-                .orElseThrow(() -> new EntityNotFound(String.format(Message.NOT_FOUND, id)));
+                .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
 
         movieInDb.setTitle(movieDto.getTitle());
         movieInDb.setYear(movieDto.getYear());
@@ -128,7 +126,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void deleteMovie(String id) {
         if (!repository.existsById(id)) {
-            throw new EntityNotFound(String.format(Message.NOT_FOUND, id));
+            throw new EntityNotFoundException(String.format(Message.NOT_FOUND, id));
         }
 
         repository.deleteById(id);
@@ -217,31 +215,6 @@ public class MovieServiceImpl implements MovieService {
                 log.info("Top {} movie are selected", limit);
             }
         }
-
-        return movieList;
-    }
-
-    private List<Movie> filterByLanguage(List<String> languages, List<Movie> movieList) {
-        if (languages == null || languages.isEmpty()) {
-             return movieList;
-        }
-
-        /* Fetch all movies which contain at least one of the language from the languages list */
-        List<Movie> updatedMovieList = new ArrayList<>();
-
-        for (String language : languages) {
-            for (Movie movie : movieList) {
-                for (String languageInMovie : movie.getLanguages()) {
-                    if (languageInMovie.equals(language)) {
-                        updatedMovieList.add(movie);
-                        break;
-                    }
-                }
-            }
-        }
-
-        movieList = updatedMovieList;
-        log.info("Movies are filtered by languages");
 
         return movieList;
     }

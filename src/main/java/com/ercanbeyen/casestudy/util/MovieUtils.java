@@ -1,6 +1,6 @@
 package com.ercanbeyen.casestudy.util;
 
-import com.ercanbeyen.casestudy.exception.EntityNotFound;
+import com.ercanbeyen.casestudy.exception.EntityNotFoundException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -63,7 +63,7 @@ public class MovieUtils {
                 result = "Dec";
                 break;
             default:
-                throw new EntityNotFound("Month " + month + " is not found");
+                throw new EntityNotFoundException("Month " + month + " is not found");
         }
 
         return result;
