@@ -54,4 +54,10 @@ public class MovieController {
         movieService.deleteMovie(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
+
+    @GetMapping("/restore/database")
+    public ResponseEntity<Object> restoreDatabase() {
+        String message = movieService.restoreDatabase();
+        return ResponseEntity.ok(message);
+    }
 }

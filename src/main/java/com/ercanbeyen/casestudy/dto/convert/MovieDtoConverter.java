@@ -1,7 +1,7 @@
 package com.ercanbeyen.casestudy.dto.convert;
 
 import com.ercanbeyen.casestudy.dto.MovieDto;
-import com.ercanbeyen.casestudy.entity.Movie;
+import com.ercanbeyen.casestudy.document.Movie;
 import org.springframework.stereotype.Component;
 
 @Component
