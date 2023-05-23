@@ -1,8 +1,8 @@
 package com.ercanbeyen.casestudy.impl;
 
-import com.ercanbeyen.casestudy.constant.Genre;
+import com.ercanbeyen.casestudy.constant.enums.Genre;
 import com.ercanbeyen.casestudy.constant.Message;
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
 import com.ercanbeyen.casestudy.document.Movie;

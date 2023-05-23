@@ -1,7 +1,8 @@
 package com.ercanbeyen.casestudy.dto;
 
-import com.ercanbeyen.casestudy.constant.Genre;
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.annotation.ImdbIDRequest;
+import com.ercanbeyen.casestudy.constant.enums.Genre;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
@@ -19,6 +20,7 @@ import java.util.List;
 @Data
 @Builder
 public class MovieDto {
+    @ImdbIDRequest
     private String imdbID; // Primary Key
     @NotBlank(message = "Title should not be blank")
     private String title;

@@ -1,7 +1,7 @@
 package com.ercanbeyen.casestudy.util;
 
-import com.ercanbeyen.casestudy.constant.Genre;
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.enums.Genre;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.document.Movie;
 import com.ercanbeyen.casestudy.exception.FileNotHandledException;
 import lombok.extern.slf4j.Slf4j;
