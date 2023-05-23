@@ -1,6 +1,6 @@
 package com.ercanbeyen.casestudy.service;
 
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 
 import java.util.List;

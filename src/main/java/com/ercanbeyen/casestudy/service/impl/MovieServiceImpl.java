@@ -1,7 +1,7 @@
 package com.ercanbeyen.casestudy.service.impl;
 
 import com.ercanbeyen.casestudy.constant.Message;
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
 import com.ercanbeyen.casestudy.document.Movie;
@@ -68,7 +68,7 @@ public class MovieServiceImpl implements MovieService {
         movieList = filterByDirector(director, movieList);
         movieList = filterByImdbRating(imdbRating, movieList);
         movieList = sortByImdbRating(sortByImdbRating, descendingByImdbRating, limit, movieList);
-        movieList = filterByTitle(title, movieList);
+        movieList = searchByTitle(title, movieList);
 
         return movieList
                 .stream()
@@ -219,11 +219,11 @@ public class MovieServiceImpl implements MovieService {
         return movieList;
     }
 
-    private List<Movie> filterByTitle(String title, List<Movie> movieList) {
+    private List<Movie> searchByTitle(String title, List<Movie> movieList) {
         if (StringUtils.isNoneBlank(title)) {
             movieList = movieList
                     .stream()
-                    .filter(movie -> movie.getTitle().equals(title))
+                    .filter(movie -> movie.getTitle().startsWith(title))
                     .collect(Collectors.toList());
 
             log.info("Movie search is searched");

@@ -1,7 +1,7 @@
 package com.ercanbeyen.casestudy.document;
 
-import com.ercanbeyen.casestudy.constant.Genre;
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.enums.Genre;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.*;
