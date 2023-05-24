@@ -2,6 +2,7 @@ package com.ercanbeyen.casestudy.service.impl;
 
 import com.ercanbeyen.casestudy.constant.Message;
 import com.ercanbeyen.casestudy.constant.enums.Type;
+import com.ercanbeyen.casestudy.dto.CustomPage;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
 import com.ercanbeyen.casestudy.document.Movie;
@@ -13,9 +14,13 @@ import com.ercanbeyen.casestudy.util.FileHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,15 +65,50 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public List<MovieDto> getMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, String title) {
+    public List<MovieDto> filterMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, String title) {
         List<Movie> movieList = repository.findAll();
         log.info("Movies are fetched from the database");
 
-        movieList = filterByType(type, movieList);
-        movieList = filterByDirector(director, movieList);
-        movieList = filterByImdbRating(imdbRating, movieList);
-        movieList = sortByImdbRating(sortByImdbRating, descendingByImdbRating, limit, movieList);
-        movieList = searchByTitle(title, movieList);
+        Predicate<Movie> filteringMovie =
+                movie -> (
+                        (type == null || movie.getType() == type)
+                        && (StringUtils.isBlank(director) || movie.getDirector().equals(director))
+                        && (StringUtils.isBlank(title) || movie.getDirector().equals(director))
+                        && (imdbRating == null || (movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating)));
+
+        Comparator<Movie> movieComparator = Comparator.comparing(Movie::getImdbRating);
+
+        if (!Boolean.TRUE.equals(sortByImdbRating)) {
+            movieList = movieList
+                    .stream()
+                    .filter(filteringMovie)
+                    .collect(Collectors.toList());
+            log.info("List is not sorted");
+
+        } else if (Boolean.TRUE.equals(descendingByImdbRating)) {
+            movieList = movieList
+                    .stream()
+                    .filter(filteringMovie)
+                    .sorted(movieComparator.reversed())
+                    .collect(Collectors.toList());
+            log.info("List is sorted as descending");
+        } else {
+            movieList = movieList
+                    .stream()
+                    .filter(filteringMovie)
+                    .sorted(movieComparator)
+                    .collect(Collectors.toList());
+
+            log.info("List is sorted as ascending");
+        }
+
+        if (limit != null) {
+            movieList = movieList
+                    .stream()
+                    .limit(limit)
+                    .collect(Collectors.toList());
+            log.info("List is limited");
+        }
 
         return movieList
                 .stream()
@@ -85,6 +125,25 @@ public class MovieServiceImpl implements MovieService {
         log.info("Movie is fetched from the database");
 
         return converter.convert(movieInDb);
+    }
+
+    @Override
+    public List<MovieDto> searchMovies(String title) {
+        return repository.findAllByTitleLikeIgnoreCase(title)
+                .stream()
+                .map(converter::convert)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public CustomPage<Movie, MovieDto> pagination(Pageable pageable) {
+        Page<Movie> page = repository.findAll(pageable);
+        List<MovieDto> movieDtoList = page.getContent()
+                .stream()
+                .map(converter::convert)
+                .collect(Collectors.toList());
+
+        return new CustomPage<>(page, movieDtoList);
     }
 
     @Override
@@ -185,6 +244,7 @@ public class MovieServiceImpl implements MovieService {
             log.info("Movies are filtered by the imdb rating");
         }
 
+
         return movieList;
     }
 
@@ -219,11 +279,11 @@ public class MovieServiceImpl implements MovieService {
         return movieList;
     }
 
-    private List<Movie> searchByTitle(String title, List<Movie> movieList) {
+    private List<Movie> filterByTitle(String title, List<Movie> movieList) {
         if (StringUtils.isNoneBlank(title)) {
             movieList = movieList
                     .stream()
-                    .filter(movie -> movie.getTitle().startsWith(title))
+                    .filter(movie -> movie.getTitle().equals(title))
                     .collect(Collectors.toList());
 
             log.info("Movie search is searched");
