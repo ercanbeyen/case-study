@@ -20,7 +20,7 @@ import java.util.List;
 @Data
 @Builder
 public class MovieDto {
-    @ImdbIDRequest
+    @ImdbIDRequest(message = "Invalid format for imdb id")
     private String imdbID; // Primary Key
     @NotBlank(message = "Title should not be blank")
     private String title;

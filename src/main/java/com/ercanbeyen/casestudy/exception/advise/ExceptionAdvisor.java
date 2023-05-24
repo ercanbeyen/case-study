@@ -51,8 +51,14 @@ public class ExceptionAdvisor extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(FileNotHandledException.class)
-    public  ResponseEntity<Object> handleFileNotHandledException(Exception exception) {
+    public ResponseEntity<Object> handleFileNotHandledException(Exception exception) {
         ExceptionResponse response = new ExceptionResponse(HttpStatus.BAD_REQUEST.value(), LocalDateTime.now(), exception.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Object> handleGeneralException(Exception exception) {
+        ExceptionResponse response = new ExceptionResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now(), exception.getMessage());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

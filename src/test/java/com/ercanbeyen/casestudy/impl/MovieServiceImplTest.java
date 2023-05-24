@@ -163,8 +163,8 @@ class MovieServiceImplTest {
     @Test
     @DisplayName("When CreateMovie Called With Existed MovieDto It Should Throw Exception")
     void whenCreateMovieCalledWithExistedMovieDto_itShouldThrowException() {
-        MovieDto movieDto = getMockMovieDtoList().get(0);
-        Movie movie = getMockMovieList().get(0);
+        MovieDto movieDto = movieDtoList.get(0);
+        Movie movie = movieList.get(0);
         String imdbID = movie.getImdbID();
 
         Mockito.when(repository.existsById(imdbID)).thenReturn(true);
@@ -181,8 +181,8 @@ class MovieServiceImplTest {
     @Test
     @DisplayName("When GetMovie Called With Existed Id It Should Return MovieDto")
     void whenGetMovieCalledWithExistedId_itShouldReturnMovieDto() {
-        MovieDto movieDto = getMockMovieDtoList().get(0);
-        Movie movie = getMockMovieList().get(0);
+        MovieDto movieDto = movieDtoList.get(0);
+        Movie movie = movieList.get(0);
         Optional<Movie> optionalMovie = Optional.of(movie);
         String imdbID = movie.getImdbID();
 
@@ -216,9 +216,9 @@ class MovieServiceImplTest {
     @Test
     @DisplayName("When UpdateMovie Called With Existed Id And Valid MovieDto It Should Return MovieDto")
     void whenUpdateMovieCalledWithExistedIdAndValidMovieDto_itShouldReturnMovieDto() {
-        MovieDto movieDto = getMockMovieDtoList().get(0);
+        MovieDto movieDto = movieDtoList.get(0);
         String imdbID = movieDto.getImdbID();
-        Movie movie = getMockMovieList().get(0);
+        Movie movie = movieList.get(0);
         Optional<Movie> optionalMovie = Optional.of(movie);
 
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
@@ -236,7 +236,7 @@ class MovieServiceImplTest {
     @Test
     @DisplayName("When UpdateMovie Called With Not Existed Id And ValidDto It Should Throw Exception")
     void whenUpdateMovieCalledWithNotExistedIdAndValidDto_itShouldThrowException() {
-        MovieDto movieDto = getMockMovieDtoList().get(0);
+        MovieDto movieDto = movieDtoList.get(0);
         String imdbID = movieDto.getImdbID();
         Optional<Movie> optionalMovie = Optional.empty();
 
@@ -250,5 +250,37 @@ class MovieServiceImplTest {
         assertEquals(message, exception.getMessage());
 
         Mockito.verify(repository, times(1)).findById(imdbID);
+    }
+
+    @Test
+    @DisplayName("When DeleteMovie Called Existed Id It Should Delete Movie")
+    void whenDeleteMovieCalledExistedId_itShouldDeleteMovie() {
+        Movie movie = movieList.get(0);
+        String imdbId = movie.getImdbID();
+
+        Mockito.when(repository.existsById(imdbId)).thenReturn(true);
+
+        service.deleteMovie(imdbId);
+
+        Mockito.verify(repository, times(1)).existsById(imdbId);
+        Mockito.verify(repository, times(1)).deleteById(imdbId);
+
+    }
+
+    @Test
+    @DisplayName("When DeleteMovie Called With Not Existed Id It Should Throw Exception")
+    void whenDeleteMovieCalledValidNotExistedIdWithId_itShouldThrowException() {
+        String imdbID = "id-NotFound";
+
+        Mockito.when(repository.existsById(imdbID)).thenReturn(false);
+
+        RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.deleteMovie(imdbID));
+
+        String message = String.format(exception.getMessage(), imdbID);
+
+        assertEquals(message, exception.getMessage());
+
+        Mockito.verify(repository, times(1)).existsById(imdbID);
+
     }
 }
