@@ -10,7 +10,7 @@ import java.util.List;
 
 public interface MovieService {
     MovieDto createMovie(MovieDto movie);
-    List<MovieDto> filterMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, String title);
+    List<MovieDto> filterMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Long maximumSize, String title);
     MovieDto getMovie(String id);
     List<MovieDto> searchMovies(String title);
     CustomPage<Movie, MovieDto> pagination(Pageable pageable);
