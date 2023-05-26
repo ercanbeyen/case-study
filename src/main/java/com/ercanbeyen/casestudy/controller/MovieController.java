@@ -1,9 +1,15 @@
 package com.ercanbeyen.casestudy.controller;
 
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.enums.Type;
+import com.ercanbeyen.casestudy.document.Movie;
+import com.ercanbeyen.casestudy.dto.CustomPage;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.service.MovieService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,35 +24,63 @@ public class MovieController {
     private final MovieService movieService;
 
     @PostMapping
-    public ResponseEntity<Object> createMovie(@Valid @RequestBody MovieDto movie) {
-        MovieDto newMovie = movieService.createMovie(movie);
+    public ResponseEntity<Object> createMovie(@Valid @RequestBody MovieDto movieDto) {
+        MovieDto newMovie = movieService.createMovie(movieDto);
         return new ResponseEntity<>(newMovie, HttpStatus.CREATED);
     }
 
-    @GetMapping
-    public ResponseEntity<Object> getMovies(
+    @GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
+    public ResponseEntity<Object> filterMovies(
             @RequestParam(required = false) Type type,
             @RequestParam(required = false) String director,
-            @RequestParam(required = false) Double imdbRating,
-            @RequestParam(required = false) Boolean sortByImdbRating,
-            @RequestParam(required = false) Boolean descendingByImdbRating,
-            @RequestParam(required = false) Integer limit,
-            @RequestBody List<String> languages,
+            @RequestParam(required = false, value = "rating") Double imdbRating,
+            @RequestParam(required = false, value = "sort") Boolean sortByImdbRating,
+            @RequestParam(required = false, value = "descending") Boolean descendingByImdbRating,
+            @RequestParam(required = false, value = "maxSize") Long maximumSize,
             @RequestParam(required = false) String title) {
-        List<MovieDto> movieList = movieService.getMovies(type, director, imdbRating, sortByImdbRating, descendingByImdbRating, limit, languages, title);
-        return ResponseEntity.ok(movieList);
+        List<MovieDto> movieDtoList = movieService.filterMovies(type, director, imdbRating, sortByImdbRating, descendingByImdbRating, maximumSize, title);
+
+        movieDtoList.forEach(movieDto -> {
+            Link link = WebMvcLinkBuilder.linkTo(MovieController.class).slash(movieDto.getImdbID()).withSelfRel();
+            movieDto.add(link);
+        });
+
+        return ResponseEntity.ok(movieDtoList);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/search", produces = MediaTypes.HAL_JSON_VALUE)
+    public ResponseEntity<Object> searchMovies(@RequestParam String title) {
+        List<MovieDto> movieDtoList = movieService.searchMovies(title);
+
+        movieDtoList.forEach(movieDto -> {
+            Link link = WebMvcLinkBuilder.linkTo(MovieController.class).slash(movieDto.getImdbID()).withSelfRel();
+            movieDto.add(link);
+        });
+
+        return ResponseEntity.ok(movieDtoList);
+    }
+
+    @GetMapping("/page")
+    public ResponseEntity<Object> pagination(Pageable pageable) {
+        CustomPage<Movie, MovieDto> page = movieService.pagination(pageable);
+        return ResponseEntity.ok(page);
+    }
+
+    @GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Object> getMovie(@PathVariable String id) {
-        MovieDto movie = movieService.getMovie(id);
-        return ResponseEntity.ok(movie);
+        MovieDto movieDto = movieService.getMovie(id);
+
+        Link selfLink = WebMvcLinkBuilder.linkTo(MovieController.class).slash(movieDto.getImdbID()).withSelfRel();
+        Link posterLink = WebMvcLinkBuilder.linkTo(MovieController.class).slash(movieDto.getPosterUrl()).withRel("poster");
+
+        movieDto.add(selfLink, posterLink);
+        return ResponseEntity.ok(movieDto);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Object> updateMovie(@PathVariable String id, @Valid @RequestBody MovieDto movie) {
-        MovieDto updatedMovie = movieService.updateMovie(id, movie);
-        return ResponseEntity.ok(updatedMovie);
+    public ResponseEntity<Object> updateMovie(@PathVariable String id, @Valid @RequestBody MovieDto movieDto) {
+        MovieDto updatedMovieDto = movieService.updateMovie(id, movieDto);
+        return ResponseEntity.ok(updatedMovieDto);
     }
 
     @DeleteMapping("/{id}")

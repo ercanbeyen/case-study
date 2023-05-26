@@ -1,10 +1,13 @@
 package com.ercanbeyen.casestudy.dto;
 
-import com.ercanbeyen.casestudy.constant.Genre;
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.annotation.ImdbIDRequest;
+import com.ercanbeyen.casestudy.constant.enums.Genre;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 import lombok.Data;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.RepresentationModel;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -18,7 +21,8 @@ import java.util.List;
 
 @Data
 @Builder
-public class MovieDto {
+public class MovieDto extends RepresentationModel<EntityModel<MovieDto>> {
+    @ImdbIDRequest(message = "Invalid format for imdb id")
     private String imdbID; // Primary Key
     @NotBlank(message = "Title should not be blank")
     private String title;

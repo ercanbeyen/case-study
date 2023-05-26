@@ -1,9 +1,9 @@
 package com.ercanbeyen.casestudy.util;
 
-import com.ercanbeyen.casestudy.constant.Genre;
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.enums.Genre;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.document.Movie;
-import com.ercanbeyen.casestudy.exception.FileNotHandled;
+import com.ercanbeyen.casestudy.exception.FileNotHandledException;
 import lombok.extern.slf4j.Slf4j;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -39,7 +39,7 @@ public class FileHandler {
 
             return list;
         } catch (ParseException | IOException exception) {
-            throw new FileNotHandled(exception.getMessage());
+            throw new FileNotHandledException(exception.getMessage());
         }
     }
 
@@ -182,7 +182,7 @@ public class FileHandler {
             fileWriter.write(jsonObjectList.toString()); // Overwrite the file
             fileWriter.flush();
         } catch (IOException exception) {
-            throw new FileNotHandled(exception.getMessage());
+            throw new FileNotHandledException(exception.getMessage());
         }
     }
 

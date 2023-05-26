@@ -1,4 +1,4 @@
-package com.ercanbeyen.casestudy.constant;
+package com.ercanbeyen.casestudy.constant.enums;
 
 import java.util.Locale;
 
