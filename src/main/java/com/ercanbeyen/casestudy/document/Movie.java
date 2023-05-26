@@ -1,13 +1,14 @@
 package com.ercanbeyen.casestudy.document;
 
-import com.ercanbeyen.casestudy.constant.Genre;
-import com.ercanbeyen.casestudy.constant.Type;
+import com.ercanbeyen.casestudy.constant.enums.Genre;
+import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
+import org.springframework.hateoas.RepresentationModel;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
