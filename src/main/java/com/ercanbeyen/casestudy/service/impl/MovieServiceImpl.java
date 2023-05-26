@@ -35,6 +35,7 @@ public class MovieServiceImpl implements MovieService {
         String id = movieDto.getImdbID();
 
         if (repository.existsById(id)) {
+            log.warn("Movie already exists");
             throw new EntityAlreadyExistException(String.format(Message.ALREADY_EXIST, id));
         }
 
@@ -61,27 +62,35 @@ public class MovieServiceImpl implements MovieService {
                 .type(movieDto.getType())
                 .build();
 
-        return converter.convert(repository.save(movie));
+        Movie newMovie = repository.save(movie);
+        log.info("Movie is created");
+
+        return converter.convert(newMovie);
     }
 
     @Override
-    public List<MovieDto> filterMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, String title) {
-        List<Movie> movieList = repository.findAll();
-        log.info("Movies are fetched from the database");
-
+    public List<MovieDto> filterMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Long maximumSize, String title) {
         Predicate<Movie> filteringMovie =
                 movie -> (
                         (type == null || movie.getType() == type)
                         && (StringUtils.isBlank(director) || movie.getDirector().equals(director))
                         && (StringUtils.isBlank(title) || movie.getDirector().equals(director))
-                        && (imdbRating == null || (movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating)));
+                        && (imdbRating == null || (movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating))
+                );
 
+        List<Movie> movieList = repository.findAll(); // Eager Loading
         Comparator<Movie> movieComparator = Comparator.comparing(Movie::getImdbRating);
+
+        if (maximumSize == null) {
+            maximumSize = repository.count();
+            log.info("There is no is maximum size value");
+        }
 
         if (!Boolean.TRUE.equals(sortByImdbRating)) {
             movieList = movieList
                     .stream()
                     .filter(filteringMovie)
+                    .limit(maximumSize)
                     .collect(Collectors.toList());
             log.info("List is not sorted");
 
@@ -90,6 +99,7 @@ public class MovieServiceImpl implements MovieService {
                     .stream()
                     .filter(filteringMovie)
                     .sorted(movieComparator.reversed())
+                    .limit(maximumSize)
                     .collect(Collectors.toList());
             log.info("List is sorted as descending");
         } else {
@@ -97,17 +107,9 @@ public class MovieServiceImpl implements MovieService {
                     .stream()
                     .filter(filteringMovie)
                     .sorted(movieComparator)
+                    .limit(maximumSize)
                     .collect(Collectors.toList());
-
             log.info("List is sorted as ascending");
-        }
-
-        if (limit != null) {
-            movieList = movieList
-                    .stream()
-                    .limit(limit)
-                    .collect(Collectors.toList());
-            log.info("List is limited");
         }
 
         return movieList
@@ -118,10 +120,8 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieDto getMovie(String id) {
-        Movie movieInDb = repository
-                .findById(id)
+        Movie movieInDb = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
-
         log.info("Movie is fetched from the database");
 
         return converter.convert(movieInDb);
@@ -138,19 +138,22 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public CustomPage<Movie, MovieDto> pagination(Pageable pageable) {
         Page<Movie> page = repository.findAll(pageable);
+        log.info("Pagination is applied for movie list");
+
         List<MovieDto> movieDtoList = page.getContent()
                 .stream()
                 .map(converter::convert)
                 .collect(Collectors.toList());
+        log.info("Pagination is applied for movie dto list");
 
         return new CustomPage<>(page, movieDtoList);
     }
 
     @Override
     public MovieDto updateMovie(String id, MovieDto movieDto) {
-        Movie movieInDb = repository
-                .findById(id)
+        Movie movieInDb = repository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
+        log.info("Movie is found from the database");
 
         movieInDb.setTitle(movieDto.getTitle());
         movieInDb.setYear(movieDto.getYear());
@@ -172,8 +175,10 @@ public class MovieServiceImpl implements MovieService {
 
         if (movieInDb.getType() == Type.SERIES) {
             movieInDb.setTotalSeasons(movieDto.getTotalSeasons());
+            log.info("Type is series");
         } else {
             movieInDb.setTotalSeasons(null);
+            log.info("Type is movie");
         }
 
         Movie savedMovie = repository.save(movieInDb);
@@ -185,10 +190,14 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void deleteMovie(String id) {
         if (!repository.existsById(id)) {
+            log.warn("Id is not found");
             throw new EntityNotFoundException(String.format(Message.NOT_FOUND, id));
         }
 
+        log.info("Movie is found");
+
         repository.deleteById(id);
+        log.info("Movie is successfully deleted");
     }
 
     @Override
@@ -204,91 +213,8 @@ public class MovieServiceImpl implements MovieService {
         log.info("File is read");
 
         repository.saveAll(movieList);
+        log.info("Database is restored");
 
         return "Database is restored";
-    }
-
-    private List<Movie> filterByType(Type type, List<Movie> movieList) {
-        if (type != null) {
-            movieList = movieList
-                    .stream()
-                    .filter(movie -> movie.getType() == type)
-                    .collect(Collectors.toList());
-
-            log.info("Movies are filtered by type");
-        }
-
-        return movieList;
-    }
-
-    private List<Movie> filterByDirector(String director, List<Movie> movieList) {
-        if (!StringUtils.isBlank(director)) {
-            movieList = movieList
-                    .stream()
-                    .filter(movie -> movie.getDirector().equals(director))
-                    .collect(Collectors.toList());
-
-            log.info("Movies are filtered by director");
-        }
-
-        return movieList;
-    }
-
-    private List<Movie> filterByImdbRating(Double imdbRating, List<Movie> movieList) {
-        if (imdbRating != null) {
-            movieList = movieList
-                    .stream()
-                    .filter(movie -> movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating)
-                    .collect(Collectors.toList());
-
-            log.info("Movies are filtered by the imdb rating");
-        }
-
-
-        return movieList;
-    }
-
-    private List<Movie> sortByImdbRating(Boolean sortByImdbRating, Boolean descendingByImdbRating, Integer limit, List<Movie> movieList) {
-        if (sortByImdbRating != null && sortByImdbRating) {
-            movieList = movieList
-                    .stream()
-                    .sorted((movie1, movie2) -> {
-                        double imdbRating1 = movie1.getImdbRating();
-                        double imdbRating2 = movie2.getImdbRating();
-
-                        if (descendingByImdbRating != null && descendingByImdbRating) {
-                            return Double.compare(imdbRating2, imdbRating1);
-                        } else {
-                            return Double.compare(imdbRating1, imdbRating2);
-                        }
-                    })
-                    .collect(Collectors.toList());
-
-            log.info("Movies are sorted");
-
-            if (limit != null) {
-                movieList = movieList
-                        .stream()
-                        .limit(limit)
-                        .collect(Collectors.toList());
-
-                log.info("Top {} movie are selected", limit);
-            }
-        }
-
-        return movieList;
-    }
-
-    private List<Movie> filterByTitle(String title, List<Movie> movieList) {
-        if (StringUtils.isNoneBlank(title)) {
-            movieList = movieList
-                    .stream()
-                    .filter(movie -> movie.getTitle().equals(title))
-                    .collect(Collectors.toList());
-
-            log.info("Movie search is searched");
-        }
-
-        return movieList;
     }
 }

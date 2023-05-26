@@ -7,6 +7,9 @@ import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.service.MovieService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.MediaTypes;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,22 +29,34 @@ public class MovieController {
         return new ResponseEntity<>(newMovie, HttpStatus.CREATED);
     }
 
-    @GetMapping
+    @GetMapping(produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Object> filterMovies(
             @RequestParam(required = false) Type type,
             @RequestParam(required = false) String director,
-            @RequestParam(required = false) Double imdbRating,
-            @RequestParam(required = false) Boolean sortByImdbRating,
-            @RequestParam(required = false) Boolean descendingByImdbRating,
-            @RequestParam(required = false) Integer limit,
+            @RequestParam(required = false, value = "rating") Double imdbRating,
+            @RequestParam(required = false, value = "sort") Boolean sortByImdbRating,
+            @RequestParam(required = false, value = "descending") Boolean descendingByImdbRating,
+            @RequestParam(required = false, value = "maxSize") Long maximumSize,
             @RequestParam(required = false) String title) {
-        List<MovieDto> movieDtoList = movieService.filterMovies(type, director, imdbRating, sortByImdbRating, descendingByImdbRating, limit, title);
+        List<MovieDto> movieDtoList = movieService.filterMovies(type, director, imdbRating, sortByImdbRating, descendingByImdbRating, maximumSize, title);
+
+        movieDtoList.forEach(movieDto -> {
+            Link link = WebMvcLinkBuilder.linkTo(MovieController.class).slash(movieDto.getImdbID()).withSelfRel();
+            movieDto.add(link);
+        });
+
         return ResponseEntity.ok(movieDtoList);
     }
 
-    @GetMapping("/search")
+    @GetMapping(value = "/search", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Object> searchMovies(@RequestParam String title) {
         List<MovieDto> movieDtoList = movieService.searchMovies(title);
+
+        movieDtoList.forEach(movieDto -> {
+            Link link = WebMvcLinkBuilder.linkTo(MovieController.class).slash(movieDto.getImdbID()).withSelfRel();
+            movieDto.add(link);
+        });
+
         return ResponseEntity.ok(movieDtoList);
     }
 
@@ -51,9 +66,14 @@ public class MovieController {
         return ResponseEntity.ok(page);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping(value = "/{id}", produces = MediaTypes.HAL_JSON_VALUE)
     public ResponseEntity<Object> getMovie(@PathVariable String id) {
         MovieDto movieDto = movieService.getMovie(id);
+
+        Link selfLink = WebMvcLinkBuilder.linkTo(MovieController.class).slash(movieDto.getImdbID()).withSelfRel();
+        Link posterLink = WebMvcLinkBuilder.linkTo(MovieController.class).slash(movieDto.getPosterUrl()).withRel("poster");
+
+        movieDto.add(selfLink, posterLink);
         return ResponseEntity.ok(movieDto);
     }
 
