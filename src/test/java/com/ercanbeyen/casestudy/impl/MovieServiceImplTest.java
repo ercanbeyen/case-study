@@ -19,9 +19,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -128,10 +130,12 @@ class MovieServiceImplTest {
     }
 
     private List<MovieDto> getMockMovieDtoList() {
-        List<Movie> movieList = getMockMovieList();
-        return movieList
+        List<Movie> movies = getMockMovieList();
+        MovieDtoConverter initialConverter = new MovieDtoConverter();
+
+        return movies
                 .stream()
-                .map(converter::convert)
+                .map(initialConverter::convert)
                 .collect(Collectors.toList());
     }
 
@@ -139,25 +143,28 @@ class MovieServiceImplTest {
     public void setup() {
         movieList = getMockMovieList();
         movieDtoList = getMockMovieDtoList();
+        //repository = Mockito.mock(MovieRepository.class);
+        //converter = Mockito.mock(MovieDtoConverter.class);
+        //service = new MovieServiceImpl(repository, converter);
     }
 
     @Test
     @DisplayName("When CreateMovie Called With Not Existed MovieDto It Should Return MovieDto")
     void whenCreateMovieCalledWithNotExistedMovieDto_itShouldReturnMovieDto() {
         Movie movie = movieList.get(0);
-        MovieDto movieDto = movieDtoList.get(0);
+        MovieDto expected = movieDtoList.get(0);
 
-        Mockito.when(repository.existsById(movieDto.getImdbID())).thenReturn(false);
+        Mockito.when(repository.existsById(expected.getImdbID())).thenReturn(false);
         Mockito.when(repository.save(any(Movie.class))).thenReturn(movie);
-        Mockito.when(converter.convert(movie)).thenReturn(movieDto);
+        Mockito.when(converter.convert(movie)).thenReturn(expected);
 
-        MovieDto result = service.createMovie(movieDto);
+        MovieDto actual = service.createMovie(expected);
 
-        assertEquals(movieDto, result);
+        assertEquals(expected, actual);
 
         Mockito.verify(repository, times(1)).existsById(movie.getImdbID());
         Mockito.verify(repository, times(1)).save(any(Movie.class));
-        //Mockito.verify(converter).convert(movie);
+        Mockito.verify(converter, times(1)).convert(movie);
     }
 
     @Test
@@ -170,30 +177,33 @@ class MovieServiceImplTest {
         Mockito.when(repository.existsById(imdbID)).thenReturn(true);
 
         RuntimeException exception = assertThrows(EntityAlreadyExistException.class, () -> service.createMovie(movieDto));
+        String expected = exception.getMessage();
 
-        String message = String.format(Message.ALREADY_EXIST, imdbID);
+        String actual = String.format(Message.ALREADY_EXIST, imdbID);
 
-        assertEquals(message, exception.getMessage());
+        assertEquals(expected, actual);
 
         Mockito.verify(repository, times(1)).existsById(imdbID);
+        Mockito.verifyNoInteractions(converter);
     }
 
     @Test
     @DisplayName("When GetMovie Called With Existed Id It Should Return MovieDto")
     void whenGetMovieCalledWithExistedId_itShouldReturnMovieDto() {
-        MovieDto movieDto = movieDtoList.get(0);
+        MovieDto expected = movieDtoList.get(0);
         Movie movie = movieList.get(0);
         Optional<Movie> optionalMovie = Optional.of(movie);
         String imdbID = movie.getImdbID();
 
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
-        Mockito.when(converter.convert(movie)).thenReturn(movieDto);
+        Mockito.when(converter.convert(movie)).thenReturn(expected);
 
-        MovieDto result = service.getMovie(imdbID);
+        MovieDto actual = service.getMovie(imdbID);
 
-        assertEquals(movieDto, result);
+        assertEquals(expected, actual);
 
         Mockito.verify(repository, times(1)).findById(imdbID);
+        Mockito.verify(converter, times(1)).convert(any(Movie.class));
     }
 
     @Test
@@ -205,32 +215,35 @@ class MovieServiceImplTest {
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
 
         RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.getMovie(imdbID));
+        String expected = exception.getMessage();
 
-        String message = String.format(Message.NOT_FOUND, imdbID);
+        String actual = String.format(Message.NOT_FOUND, imdbID);
 
-        assertEquals(message, exception.getMessage());
+        assertEquals(actual, expected);
 
         Mockito.verify(repository, times(1)).findById(imdbID);
+        Mockito.verifyNoInteractions(converter);
     }
 
     @Test
     @DisplayName("When UpdateMovie Called With Existed Id And Valid MovieDto It Should Return MovieDto")
     void whenUpdateMovieCalledWithExistedIdAndValidMovieDto_itShouldReturnMovieDto() {
-        MovieDto movieDto = movieDtoList.get(0);
-        String imdbID = movieDto.getImdbID();
+        MovieDto expected = movieDtoList.get(0);
+        String imdbID = expected.getImdbID();
         Movie movie = movieList.get(0);
         Optional<Movie> optionalMovie = Optional.of(movie);
 
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
         Mockito.when(repository.save(any(Movie.class))).thenReturn(movie);
-        Mockito.when(converter.convert(movie)).thenReturn(movieDto);
+        Mockito.when(converter.convert(movie)).thenReturn(expected);
 
-        MovieDto result = service.updateMovie(imdbID, movieDto);
+        MovieDto actual = service.updateMovie(imdbID, expected);
 
-        assertEquals(movieDto, result);
+        assertEquals(expected, actual);
 
         Mockito.verify(repository, times(1)).findById(imdbID);
         Mockito.verify(repository, times(1)).save(movie);
+        Mockito.verify(converter, times(1)).convert(movie);
     }
 
     @Test
@@ -244,12 +257,14 @@ class MovieServiceImplTest {
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
 
         RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.updateMovie(imdbID, movieDto));
+        String expected = exception.getMessage();
 
-        String message = String.format(Message.NOT_FOUND, imdbID);
+        String actual = String.format(Message.NOT_FOUND, imdbID);
 
-        assertEquals(message, exception.getMessage());
+        assertEquals(expected, actual);
 
         Mockito.verify(repository, times(1)).findById(imdbID);
+        Mockito.verifyNoInteractions(converter);
     }
 
     @Test
@@ -275,12 +290,36 @@ class MovieServiceImplTest {
         Mockito.when(repository.existsById(imdbID)).thenReturn(false);
 
         RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.deleteMovie(imdbID));
+        String actual = exception.getMessage();
 
-        String message = String.format(exception.getMessage(), imdbID);
+        String expected = String.format(exception.getMessage(), imdbID);
 
-        assertEquals(message, exception.getMessage());
+        assertEquals(expected, actual);
 
         Mockito.verify(repository, times(1)).existsById(imdbID);
+        Mockito.verifyNoInteractions(converter);
+
+    }
+
+    @Test
+    @DisplayName("When SearchMovie Called With Title It Should Returns MovieDto List")
+    void whenSearchMovieCalledWithTitle_itShouldReturnsMovieDtoList() {
+        Movie movie = movieList.get(0);
+        MovieDto movieDto = movieDtoList.get(0);
+        String title = "title";
+        Pageable pageable = Pageable.ofSize(1).withPage(0);
+
+        List<MovieDto> expected = Collections.singletonList(movieDto);
+
+        Mockito.when(repository.findAllByTitleLikeIgnoreCase(title, pageable)).thenReturn(Collections.singletonList(movie));
+        Mockito.when(converter.convert(movie)).thenReturn(movieDto);
+
+        List<MovieDto> actual = service.searchMovies(title, pageable);
+
+        assertEquals(expected, actual);
+
+        Mockito.verify(repository).findAllByTitleLikeIgnoreCase(title, pageable);
+        Mockito.verify(converter, times(1)).convert(movie);
 
     }
 }
