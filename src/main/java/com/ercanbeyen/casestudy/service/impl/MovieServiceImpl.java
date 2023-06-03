@@ -1,6 +1,7 @@
 package com.ercanbeyen.casestudy.service.impl;
 
 import com.ercanbeyen.casestudy.constant.Message;
+import com.ercanbeyen.casestudy.constant.enums.OrderBy;
 import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.dto.CustomPage;
 import com.ercanbeyen.casestudy.dto.MovieDto;
@@ -33,11 +34,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public MovieDto createMovie(MovieDto movieDto) {
         String id = movieDto.getImdbID();
-
-        if (repository.existsById(id)) {
-            log.warn("Movie already exists");
-            throw new EntityAlreadyExistException(String.format(Message.ALREADY_EXIST, id));
-        }
+        validateMovieExist(id);
 
         Movie movie = Movie.builder()
                 .imdbID(movieDto.getImdbID())
@@ -69,50 +66,50 @@ public class MovieServiceImpl implements MovieService {
     }
 
     @Override
-    public List<MovieDto> filterMovies(Type type, String director, Double imdbRating, Boolean sortByImdbRating, Boolean descendingByImdbRating, Long maximumSize, String title) {
+    public List<MovieDto> filterMovies(Type type, String director, Double imdbRating, OrderBy orderBy, Long maximumSize, Pageable pageable) {
         Predicate<Movie> filteringMovie =
                 movie -> (
                         (type == null || movie.getType() == type)
                         && (StringUtils.isBlank(director) || movie.getDirector().equals(director))
-                        && (StringUtils.isBlank(title) || movie.getDirector().equals(director))
                         && (imdbRating == null || (movie.getImdbRating() != null && movie.getImdbRating() >= imdbRating))
                 );
 
-        List<Movie> movieList = repository.findAll(); // Eager Loading
-        Comparator<Movie> movieComparator = Comparator.comparing(Movie::getImdbRating);
+        List<Movie> movieList = repository.findAll(pageable).toList(); // Lazy Loading
 
         if (maximumSize == null) {
             maximumSize = repository.count();
             log.info("There is no is maximum size value");
         }
 
-        if (!Boolean.TRUE.equals(sortByImdbRating)) {
-            movieList = movieList
-                    .stream()
-                    .filter(filteringMovie)
-                    .limit(maximumSize)
-                    .collect(Collectors.toList());
+        if (orderBy == null) {
             log.info("List is not sorted");
-
-        } else if (Boolean.TRUE.equals(descendingByImdbRating)) {
-            movieList = movieList
+            return movieList
                     .stream()
                     .filter(filteringMovie)
-                    .sorted(movieComparator.reversed())
                     .limit(maximumSize)
-                    .collect(Collectors.toList());
-            log.info("List is sorted as descending");
-        } else {
-            movieList = movieList
+                    .collect(Collectors.toList())
                     .stream()
-                    .filter(filteringMovie)
-                    .sorted(movieComparator)
-                    .limit(maximumSize)
+                    .map(converter::convert)
                     .collect(Collectors.toList());
-            log.info("List is sorted as ascending");
         }
 
+
+        Comparator<Movie> movieComparator = Comparator.comparing(Movie::getImdbRating);
+        log.info("List will be sorted as ascending");
+
+        if (orderBy == OrderBy.DESCENDING) {
+            movieComparator = movieComparator.reversed();
+            log.info("Sorting status is changed, list will be sorted as descending");
+        }
+
+        log.info("List is being sorted");
+
         return movieList
+                .stream()
+                .filter(filteringMovie)
+                .sorted(movieComparator)
+                .limit(maximumSize)
+                .collect(Collectors.toList())
                 .stream()
                 .map(converter::convert)
                 .collect(Collectors.toList());
@@ -120,16 +117,15 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieDto getMovie(String id) {
-        Movie movieInDb = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
+        Movie movieInDb = findById(id);
         log.info("Movie is fetched from the database");
 
         return converter.convert(movieInDb);
     }
 
     @Override
-    public List<MovieDto> searchMovies(String title) {
-        return repository.findAllByTitleLikeIgnoreCase(title)
+    public List<MovieDto> searchMovies(String title, Pageable pageable) {
+        return repository.findAllByTitleLikeIgnoreCase(title, pageable)
                 .stream()
                 .map(converter::convert)
                 .collect(Collectors.toList());
@@ -151,8 +147,7 @@ public class MovieServiceImpl implements MovieService {
 
     @Override
     public MovieDto updateMovie(String id, MovieDto movieDto) {
-        Movie movieInDb = repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
+        Movie movieInDb = findById(id);
         log.info("Movie is found from the database");
 
         movieInDb.setTitle(movieDto.getTitle());
@@ -190,10 +185,8 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void deleteMovie(String id) {
         if (!repository.existsById(id)) {
-            log.warn("Id is not found");
             throw new EntityNotFoundException(String.format(Message.NOT_FOUND, id));
         }
-
         log.info("Movie is found");
 
         repository.deleteById(id);
@@ -216,5 +209,17 @@ public class MovieServiceImpl implements MovieService {
         log.info("Database is restored");
 
         return "Database is restored";
+    }
+
+    private void validateMovieExist(String id) {
+        if (repository.existsById(id)) {
+            log.warn("Movie already exists");
+            throw new EntityAlreadyExistException(String.format(Message.ALREADY_EXIST, id));
+        }
+    }
+
+    private Movie findById(String id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
     }
 }
