@@ -6,8 +6,8 @@ import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
 import com.ercanbeyen.casestudy.document.Movie;
-import com.ercanbeyen.casestudy.exception.EntityAlreadyExistException;
-import com.ercanbeyen.casestudy.exception.EntityNotFoundException;
+import com.ercanbeyen.casestudy.exception.DocumentAlreadyExistException;
+import com.ercanbeyen.casestudy.exception.DocumentNotFoundException;
 import com.ercanbeyen.casestudy.repository.MovieRepository;
 import com.ercanbeyen.casestudy.service.impl.MovieServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -143,9 +143,6 @@ class MovieServiceImplTest {
     public void setup() {
         movieList = getMockMovieList();
         movieDtoList = getMockMovieDtoList();
-        //repository = Mockito.mock(MovieRepository.class);
-        //converter = Mockito.mock(MovieDtoConverter.class);
-        //service = new MovieServiceImpl(repository, converter);
     }
 
     @Test
@@ -176,7 +173,7 @@ class MovieServiceImplTest {
 
         Mockito.when(repository.existsById(imdbID)).thenReturn(true);
 
-        RuntimeException exception = assertThrows(EntityAlreadyExistException.class, () -> service.createMovie(movieDto));
+        RuntimeException exception = assertThrows(DocumentAlreadyExistException.class, () -> service.createMovie(movieDto));
         String expected = exception.getMessage();
 
         String actual = String.format(Message.ALREADY_EXIST, imdbID);
@@ -214,7 +211,7 @@ class MovieServiceImplTest {
 
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
 
-        RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.getMovie(imdbID));
+        RuntimeException exception = assertThrows(DocumentNotFoundException.class, () -> service.getMovie(imdbID));
         String expected = exception.getMessage();
 
         String actual = String.format(Message.NOT_FOUND, imdbID);
@@ -256,7 +253,7 @@ class MovieServiceImplTest {
 
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
 
-        RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.updateMovie(imdbID, movieDto));
+        RuntimeException exception = assertThrows(DocumentNotFoundException.class, () -> service.updateMovie(imdbID, movieDto));
         String expected = exception.getMessage();
 
         String actual = String.format(Message.NOT_FOUND, imdbID);
@@ -289,7 +286,7 @@ class MovieServiceImplTest {
 
         Mockito.when(repository.existsById(imdbID)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.deleteMovie(imdbID));
+        RuntimeException exception = assertThrows(DocumentNotFoundException.class, () -> service.deleteMovie(imdbID));
         String actual = exception.getMessage();
 
         String expected = String.format(exception.getMessage(), imdbID);

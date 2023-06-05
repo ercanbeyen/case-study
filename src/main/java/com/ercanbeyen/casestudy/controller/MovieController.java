@@ -5,8 +5,8 @@ import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.document.Movie;
 import com.ercanbeyen.casestudy.dto.CustomPage;
 import com.ercanbeyen.casestudy.dto.MovieDto;
-import com.ercanbeyen.casestudy.exception.EntityAlreadyExistException;
-import com.ercanbeyen.casestudy.exception.EntityNotFoundException;
+import com.ercanbeyen.casestudy.exception.DocumentAlreadyExistException;
+import com.ercanbeyen.casestudy.exception.DocumentNotFoundException;
 import com.ercanbeyen.casestudy.service.MovieService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -63,11 +63,11 @@ public class MovieController {
                             )
                     ),
                     @ApiResponse(
-                            responseCode = "407",
+                            responseCode = "200",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(
-                                            implementation = EntityAlreadyExistException.class
+                                            implementation = DocumentAlreadyExistException.class
                                     )
                             )
                     )
@@ -278,11 +278,11 @@ public class MovieController {
                             )
                     ),
                     @ApiResponse(
-                            responseCode = "400",
+                            responseCode = "200",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(
-                                            implementation = EntityNotFoundException.class
+                                            implementation = DocumentNotFoundException.class
                                     )
                             )
                     )
@@ -313,11 +313,11 @@ public class MovieController {
                             )
                     ),
                     @ApiResponse(
-                            responseCode = "404",
+                            responseCode = "200",
                             content = @Content(
                                     mediaType = "application/json",
                                     schema = @Schema(
-                                            implementation = EntityNotFoundException.class
+                                            implementation = DocumentNotFoundException.class
                                     )
                             )
                     )

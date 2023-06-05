@@ -17,8 +17,6 @@ public enum Type {
             return null;
         }
 
-        //name = StringClearUtils.clearTurkishChars(name.toUpperCase());
-        //name = name.toUpperCase();
         name = name.toUpperCase(Locale.ENGLISH);
         return Type.valueOf(name);
     }

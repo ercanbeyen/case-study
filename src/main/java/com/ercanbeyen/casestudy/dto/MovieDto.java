@@ -4,8 +4,7 @@ import com.ercanbeyen.casestudy.constant.annotation.ImdbIDRequest;
 import com.ercanbeyen.casestudy.constant.enums.Genre;
 import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.RepresentationModel;
 
@@ -19,7 +18,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 
+@EqualsAndHashCode(callSuper = true)
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class MovieDto extends RepresentationModel<EntityModel<MovieDto>> {
     @ImdbIDRequest(message = "Invalid format for imdb id")

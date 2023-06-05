@@ -7,8 +7,8 @@ import com.ercanbeyen.casestudy.dto.CustomPage;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
 import com.ercanbeyen.casestudy.document.Movie;
-import com.ercanbeyen.casestudy.exception.EntityAlreadyExistException;
-import com.ercanbeyen.casestudy.exception.EntityNotFoundException;
+import com.ercanbeyen.casestudy.exception.DocumentAlreadyExistException;
+import com.ercanbeyen.casestudy.exception.DocumentNotFoundException;
 import com.ercanbeyen.casestudy.repository.MovieRepository;
 import com.ercanbeyen.casestudy.service.MovieService;
 import com.ercanbeyen.casestudy.util.FileHandler;
@@ -185,7 +185,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public void deleteMovie(String id) {
         if (!repository.existsById(id)) {
-            throw new EntityNotFoundException(String.format(Message.NOT_FOUND, id));
+            throw new DocumentNotFoundException(String.format(Message.NOT_FOUND, id));
         }
         log.info("Movie is found");
 
@@ -214,12 +214,12 @@ public class MovieServiceImpl implements MovieService {
     private void validateMovieExist(String id) {
         if (repository.existsById(id)) {
             log.warn("Movie already exists");
-            throw new EntityAlreadyExistException(String.format(Message.ALREADY_EXIST, id));
+            throw new DocumentAlreadyExistException(String.format(Message.ALREADY_EXIST, id));
         }
     }
 
     private Movie findById(String id) {
         return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
+                .orElseThrow(() -> new DocumentNotFoundException(String.format(Message.NOT_FOUND, id)));
     }
 }
