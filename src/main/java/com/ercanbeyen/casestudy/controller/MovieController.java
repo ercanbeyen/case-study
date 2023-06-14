@@ -207,7 +207,7 @@ public class MovieController {
                     )
             )
     )
-    @GetMapping("/page")
+    @GetMapping("/pagination")
     public ResponseEntity<Object> pagination(Pageable pageable) {
         CustomPage<Movie, MovieDto> page = movieService.pagination(pageable);
         return ResponseEntity.ok(page);

@@ -1,9 +1,12 @@
 package com.ercanbeyen.casestudy.scheduler;
 
+import com.ercanbeyen.casestudy.constant.Message;
 import com.ercanbeyen.casestudy.constant.enums.Genre;
 import com.ercanbeyen.casestudy.constant.enums.Type;
 import com.ercanbeyen.casestudy.dto.MovieDto;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpEntity;
 import org.springframework.scheduling.annotation.Async;
@@ -12,67 +15,70 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.*;
 
 @Component
 @Async
 @EnableScheduling
+@RequiredArgsConstructor
 @Slf4j
 public class ScheduledTasks {
+    private final RestTemplate restTemplate;
     private static final String COLLECTION_URL = "http://localhost:8080/api/v1/movies";
     private static final String DOCUMENT_URL = COLLECTION_URL + "/{id}";
 
     @Scheduled(fixedRate = 10000) // Every 10 seconds
     public void checkForFilterMovies() {
-        log.info("Cron job for filterMovies is started");
-        Pageable pageable = Pageable.ofSize(1).withPage(0);
-        RestTemplate restTemplate = new RestTemplate();
+        final String checkedMethod = "filterMovies";
+        log.info(MessageFormat.format(Message.TASK_STARTED, checkedMethod));
 
-        log.info("Before request sent");
+        Pageable pageable = PageRequest.of(0, 1);
+
+        log.info(Message.BEFORE_REQUEST);
         MovieDto[] movieDtoArray = restTemplate.getForObject(
                 COLLECTION_URL + "?page=" + pageable.getPageNumber() + "&size=" + pageable.getPageSize(),
                 MovieDto[].class
         );
-        log.info("Response is received");
+        log.info(Message.AFTER_REQUEST);
 
         assert movieDtoArray != null;
 
-        for (MovieDto movieDto : movieDtoArray) {
-            log.info("ImdbID: {}", movieDto.getImdbID());
-        }
+        displayMovieDtoArray(movieDtoArray);
 
-        log.info("Cron job for filterMovies is finished");
+        log.info(MessageFormat.format(Message.TASK_COMPLETED, checkedMethod));
     }
 
     @Scheduled(cron = "0/15 * * * * *") // Every 15 seconds
     public void checkGetMovie() {
-        log.info("Cron job for getMovie is started");
+        final String checkedMethod = "getMovie";
+        log.info(MessageFormat.format(Message.TASK_STARTED, checkedMethod));
 
-        RestTemplate restTemplate = new RestTemplate();
         Map<String, String> parameters = new HashMap<>();
         String imdbID = "tt0499549";
         parameters.put("id", imdbID);
 
-        log.info("Before sent the request");
+        log.info(Message.BEFORE_REQUEST);
         MovieDto movieDto = restTemplate.getForObject(DOCUMENT_URL, MovieDto.class, parameters);
-        log.info("After response received");
+        log.info(Message.AFTER_REQUEST);
 
         log.info("MovieDto: {}", movieDto);
         assert movieDto != null;
 
         if (movieDto.getImdbID() == null) {
-            log.error("There is not such a movie");
+            log.error(Message.NO_SUCH_MOVIE);
         } else {
             log.info("Movie {} is fetched from the database", movieDto.getImdbID());
         }
 
-        log.info("Cron job for getMovie is finished");
+        log.info(MessageFormat.format(Message.TASK_COMPLETED, checkedMethod));
     }
 
     @Scheduled(cron = "0 * * * * *") // Every minute
     public void checkForUpdateMovie() {
-        log.info("Cron job for updateMovie is started");
+        final String checkedMethod = "updateMovie";
+        log.info(MessageFormat.format(Message.TASK_STARTED, checkedMethod));
         String imdbID = "tt0499549";
 
         MovieDto movieDto = MovieDto
@@ -98,14 +104,13 @@ public class ScheduledTasks {
                 .type(Type.MOVIE)
                 .build();
 
-        RestTemplate restTemplate = new RestTemplate();
         Map<String, String> parameters = new HashMap<>();
         parameters.put("id", imdbID);
 
-        log.info("Before request is sent");
+        log.info(Message.BEFORE_REQUEST);
         HttpEntity<MovieDto> request = new HttpEntity<>(movieDto);
         restTemplate.put(DOCUMENT_URL, request, parameters);
-        log.info("After received response");
+        log.info(Message.AFTER_REQUEST);
 
         MovieDto updatedMovie = restTemplate.getForObject(DOCUMENT_URL, MovieDto.class, parameters);
 
@@ -114,19 +119,20 @@ public class ScheduledTasks {
         log.info("Updated Movie: {}", updatedMovie);
 
         if (updatedMovie.getImdbID() == null) {
-            log.error("There is not such a movie");
+            log.error(Message.NO_SUCH_MOVIE);
         } else if (!updatedMovie.getTitle().equals(movieDto.getTitle())) {
-            log.error("Update operation is unsuccessful");
+            log.error(MessageFormat.format(Message.UNSUCCESSFUL_OPERATION_IN_TASK, checkedMethod));
         } else {
-            log.info("Update operation is successful");
+            log.info(MessageFormat.format(Message.SUCCESSFUL_OPERATION_IN_TASK, checkedMethod));
         }
 
-        log.info("Cron job for updateMovie is completed");
+        log.info(MessageFormat.format(Message.TASK_COMPLETED, checkedMethod));
     }
 
     @Scheduled(fixedRate = 45000) // Every 45 seconds
     public void checkForCreateMovie() {
-        log.info("Cron job for createMovie is started");
+        final String checkedMethod = "createMovie";
+        log.info(MessageFormat.format(Message.TASK_STARTED, checkedMethod));
         String imdbID = "ttx0test";
 
         MovieDto newMovieDto = MovieDto
@@ -152,49 +158,77 @@ public class ScheduledTasks {
                 .type(Type.MOVIE)
                 .build();
 
-        RestTemplate restTemplate = new RestTemplate();
-
-        log.info("Before request sent");
+        log.info(Message.BEFORE_REQUEST);
         MovieDto createdMovieDto = restTemplate.postForObject(COLLECTION_URL, newMovieDto, MovieDto.class);
-        log.info("After response received");
+        log.info(Message.AFTER_REQUEST);
 
         assert createdMovieDto != null;
 
         if (createdMovieDto.getImdbID() == null) {
-            log.error("Error occurred while creating the movie");
+            log.error(MessageFormat.format(Message.UNSUCCESSFUL_OPERATION_IN_TASK, checkedMethod));
         } else {
-            log.info("Movie is successfully created");
+            log.info(MessageFormat.format(Message.SUCCESSFUL_OPERATION_IN_TASK, checkedMethod));
         }
 
-        log.info("Cron job for createMovie is completed");
+        log.info(MessageFormat.format(Message.TASK_COMPLETED, checkedMethod));
     }
 
     @Scheduled(fixedRate = 50000) // Every 50 seconds
     public void checkForDeleteMovie() {
-        log.info("Cron job is started for deleteMovie");
+        final String checkedMethod = "deleteMovie";
+        log.info(MessageFormat.format(Message.TASK_STARTED, checkedMethod));
         String imdbID = "ttx0test";
 
-        RestTemplate restTemplate = new RestTemplate();
         Map<String, String> parameters = new HashMap<>();
         parameters.put("id", imdbID);
 
-        log.info("Before request is sent");
+        log.info(Message.BEFORE_REQUEST);
         restTemplate.delete(DOCUMENT_URL, parameters);
-        log.info("After request sent");
+        log.info(Message.AFTER_REQUEST);
 
         MovieDto deletedMovieDto = restTemplate.getForObject(DOCUMENT_URL, MovieDto.class, parameters);
 
         assert deletedMovieDto != null;
 
         if (deletedMovieDto.getImdbID() != null) {
-            log.error("Error occurred while deleting the movie");
+            log.error(MessageFormat.format(Message.UNSUCCESSFUL_OPERATION_IN_TASK, checkedMethod));
         } else {
-            log.info("Movie is successfully deleted");
+            log.info(MessageFormat.format(Message.SUCCESSFUL_OPERATION_IN_TASK, checkedMethod));
         }
 
-        log.info("Cron job for deleteMovie is completed");
+        log.info(MessageFormat.format(Message.TASK_COMPLETED, checkedMethod));
     }
 
+    @Scheduled(cron = "0 0/2 * * * *") // Every 2 minutes
+    public void checkForSearchMovies() {
+        final String checkedMethod = "searchMovies";
+        log.info(MessageFormat.format(Message.TASK_STARTED, checkedMethod));
+        String title = "avataR";
+        Pageable pageable = PageRequest.of(0, 1);
+
+        log.info(Message.BEFORE_REQUEST);
+        MovieDto[] movieDtoArray = restTemplate.getForObject(
+                COLLECTION_URL + "?title=" + title + "&page=" + pageable.getPageNumber() + "&size=" + pageable.getPageSize(),
+                MovieDto[].class
+        );
+        log.info(Message.AFTER_REQUEST);
+
+        assert movieDtoArray != null;
+
+        displayMovieDtoArray(movieDtoArray);
+
+        log.info(MessageFormat.format(Message.TASK_COMPLETED, checkedMethod));
+    }
+
+    public void displayMovieDtoArray(MovieDto[] movieDtoArray) {
+        if (movieDtoArray.length == 0) {
+            log.info("There is no movie in the database");
+        } else {
+            for (MovieDto movieDto : movieDtoArray) {
+                log.info("ImdbID: {}", movieDto.getImdbID());
+            }
+        }
+    }
 }
 
 
