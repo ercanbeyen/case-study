@@ -1,0 +1,62 @@
+# Case Study
+---
+
+## Spring Boot Application
+---
+
+### Summary
+
+There is 1 document in this project.
+
+Documents:
+- Movie
+
+### Requirements
+
+- Each movie must have imdb id, title, released year, director, writers and actors and type.
+- Each imdb id must be unique.
+- Metascore, imdb rating, imdb votes and total seasons must positive value.
+- You may also enter the value of total seasons which type is series.
+
+### Tech Stack
+
+- Java 8
+- Spring Boot
+- Spring Data MongoDB
+- JUnit 5
+- MongoDB
+- Scheduler
+- OpenAPI Documentation
+- Docker
+- Docker Compose
+
+
+### Prerequisties
+---
+- Maven
+- Docker
+
+### Run & Build
+---
+
+Pull the image of mongo from the Dockerhub just for one time is enough.
+
+`$ docker pull mongo`
+
+Then, you should run the below commands in order to run the aoolication
+
+1) Create jar file
+2) Create the image of the application via building
+3) Run the containers
+
+```
+$ mvn clean install
+$ docker compose build
+$ docker compose up
+```
+
+### Api Documentation
+---
+
+You may use swagger-ui with the port of the application to access the project's api documentation.<br/>
+`http://localhost:${PORT}/swagger-ui.html`
