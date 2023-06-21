@@ -25,7 +25,8 @@ public class InMemoryMovieRepository {
     }
 
     public Optional<Movie> findById(String id) {
-        return movieList.stream()
+        return movieList
+                .stream()
                 .filter(watchingItem -> watchingItem.getImdbID().equals(id))
                 .findFirst();
     }
@@ -51,7 +52,8 @@ public class InMemoryMovieRepository {
     }
 
     public void deleteById(String id) {
-        Optional<Movie> optionalMovie = movieList.stream()
+        Optional<Movie> optionalMovie = movieList
+                .stream()
                 .filter(item -> item.getImdbID().equals(id))
                 .findFirst();
 
@@ -65,7 +67,8 @@ public class InMemoryMovieRepository {
     }
 
     public boolean existsById(String id) {
-        return movieList.stream()
-                .anyMatch(watchingItem -> watchingItem.getImdbID().equals(id));
+        return movieList.
+                stream()
+                .anyMatch(movie -> movie.getImdbID().equals(id));
     }
 }

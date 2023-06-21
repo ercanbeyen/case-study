@@ -3,11 +3,12 @@ package com.ercanbeyen.casestudy.impl;
 import com.ercanbeyen.casestudy.constant.enums.Genre;
 import com.ercanbeyen.casestudy.constant.Message;
 import com.ercanbeyen.casestudy.constant.enums.Type;
+import com.ercanbeyen.casestudy.dto.CustomPage;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
 import com.ercanbeyen.casestudy.document.Movie;
-import com.ercanbeyen.casestudy.exception.EntityAlreadyExistException;
-import com.ercanbeyen.casestudy.exception.EntityNotFoundException;
+import com.ercanbeyen.casestudy.exception.DocumentAlreadyExistException;
+import com.ercanbeyen.casestudy.exception.DocumentNotFoundException;
 import com.ercanbeyen.casestudy.repository.MovieRepository;
 import com.ercanbeyen.casestudy.service.impl.MovieServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,8 +20,11 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
@@ -143,9 +147,6 @@ class MovieServiceImplTest {
     public void setup() {
         movieList = getMockMovieList();
         movieDtoList = getMockMovieDtoList();
-        //repository = Mockito.mock(MovieRepository.class);
-        //converter = Mockito.mock(MovieDtoConverter.class);
-        //service = new MovieServiceImpl(repository, converter);
     }
 
     @Test
@@ -176,10 +177,10 @@ class MovieServiceImplTest {
 
         Mockito.when(repository.existsById(imdbID)).thenReturn(true);
 
-        RuntimeException exception = assertThrows(EntityAlreadyExistException.class, () -> service.createMovie(movieDto));
+        RuntimeException exception = assertThrows(DocumentAlreadyExistException.class, () -> service.createMovie(movieDto));
         String expected = exception.getMessage();
 
-        String actual = String.format(Message.ALREADY_EXIST, imdbID);
+        String actual = MessageFormat.format(Message.ALREADY_EXIST, imdbID);
 
         assertEquals(expected, actual);
 
@@ -214,10 +215,10 @@ class MovieServiceImplTest {
 
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
 
-        RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.getMovie(imdbID));
+        RuntimeException exception = assertThrows(DocumentNotFoundException.class, () -> service.getMovie(imdbID));
         String expected = exception.getMessage();
 
-        String actual = String.format(Message.NOT_FOUND, imdbID);
+        String actual = MessageFormat.format(Message.NOT_FOUND, imdbID);
 
         assertEquals(actual, expected);
 
@@ -256,10 +257,10 @@ class MovieServiceImplTest {
 
         Mockito.when(repository.findById(imdbID)).thenReturn(optionalMovie);
 
-        RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.updateMovie(imdbID, movieDto));
+        RuntimeException exception = assertThrows(DocumentNotFoundException.class, () -> service.updateMovie(imdbID, movieDto));
         String expected = exception.getMessage();
 
-        String actual = String.format(Message.NOT_FOUND, imdbID);
+        String actual = MessageFormat.format(Message.NOT_FOUND, imdbID);
 
         assertEquals(expected, actual);
 
@@ -289,7 +290,7 @@ class MovieServiceImplTest {
 
         Mockito.when(repository.existsById(imdbID)).thenReturn(false);
 
-        RuntimeException exception = assertThrows(EntityNotFoundException.class, () -> service.deleteMovie(imdbID));
+        RuntimeException exception = assertThrows(DocumentNotFoundException.class, () -> service.deleteMovie(imdbID));
         String actual = exception.getMessage();
 
         String expected = String.format(exception.getMessage(), imdbID);
@@ -318,8 +319,34 @@ class MovieServiceImplTest {
 
         assertEquals(expected, actual);
 
-        Mockito.verify(repository).findAllByTitleLikeIgnoreCase(title, pageable);
+        Mockito.verify(repository, times(1)).findAllByTitleLikeIgnoreCase(title, pageable);
         Mockito.verify(converter, times(1)).convert(movie);
 
     }
+
+    @Test
+    @DisplayName("When Pagination Called With Valid Number And Size It Should Return CustomPage")
+    void whenPaginationCalledWithValidNumberAndSize_itShouldReturnCustomPage() {
+        Movie movie = movieList.get(0);
+        MovieDto movieDto = movieDtoList.get(0);
+        Pageable pageable = Pageable.ofSize(1).withPage(0);
+
+        List<Movie> fetchedMovieList = Collections.singletonList(movie);
+        List<MovieDto> fetchedMovieDtoList = Collections.singletonList(movieDto);
+
+        Page<Movie> moviePage = new PageImpl<>(fetchedMovieList, pageable, fetchedMovieList.size());
+        CustomPage<Movie, MovieDto> expected = new CustomPage<>(moviePage, fetchedMovieDtoList);
+
+
+        Mockito.when(repository.findAll(pageable)).thenReturn(moviePage);
+        Mockito.when(converter.convert(movie)).thenReturn(movieDto);
+
+        CustomPage<Movie, MovieDto> actual = service.pagination(pageable);
+
+        assertEquals(expected, actual);
+
+        Mockito.verify(repository, times(1)).findAll(pageable);
+        Mockito.verify(converter, times(1)).convert(movie);
+    }
+
 }

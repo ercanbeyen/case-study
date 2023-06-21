@@ -7,8 +7,8 @@ import com.ercanbeyen.casestudy.dto.CustomPage;
 import com.ercanbeyen.casestudy.dto.MovieDto;
 import com.ercanbeyen.casestudy.dto.convert.MovieDtoConverter;
 import com.ercanbeyen.casestudy.document.Movie;
-import com.ercanbeyen.casestudy.exception.EntityAlreadyExistException;
-import com.ercanbeyen.casestudy.exception.EntityNotFoundException;
+import com.ercanbeyen.casestudy.exception.DocumentAlreadyExistException;
+import com.ercanbeyen.casestudy.exception.DocumentNotFoundException;
 import com.ercanbeyen.casestudy.repository.MovieRepository;
 import com.ercanbeyen.casestudy.service.MovieService;
 import com.ercanbeyen.casestudy.util.FileHandler;
@@ -19,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
+import java.text.MessageFormat;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -31,10 +33,21 @@ public class MovieServiceImpl implements MovieService {
     private final MovieRepository repository;
     private final MovieDtoConverter converter;
 
+    /**
+     *
+     * @param movieDto is the template object which stores information of the new movie object
+     * @return movieDto format of the newly created movie object
+     */
     @Override
     public MovieDto createMovie(MovieDto movieDto) {
         String id = movieDto.getImdbID();
-        validateMovieExist(id);
+
+        if (repository.existsById(id)) {
+            log.warn(MessageFormat.format(Message.ALREADY_EXIST, id));
+            throw new DocumentAlreadyExistException(MessageFormat.format(Message.ALREADY_EXIST, id));
+        }
+
+        log.info("Movie is not in the database. ImdbID is unique");
 
         Movie movie = Movie.builder()
                 .imdbID(movieDto.getImdbID())
@@ -60,11 +73,21 @@ public class MovieServiceImpl implements MovieService {
                 .build();
 
         Movie newMovie = repository.save(movie);
-        log.info("Movie is created");
+        log.info(MessageFormat.format(Message.SUCCESSFUL_OPERATION_IN_SERVICE, "created"));
 
         return converter.convert(newMovie);
     }
 
+    /**
+     *
+     * @param type is Type of the object
+     * @param director refers to name of the director
+     * @param imdbRating is rating of the object in the imdb
+     * @param orderBy is sorting rule
+     * @param maximumSize is the limit value of the returned value
+     * @param pageable stores values of the page (number and size)
+     * @return filtered movies
+     */
     @Override
     public List<MovieDto> filterMovies(Type type, String director, Double imdbRating, OrderBy orderBy, Long maximumSize, Pageable pageable) {
         Predicate<Movie> filteringMovie =
@@ -115,14 +138,25 @@ public class MovieServiceImpl implements MovieService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     *
+     * @param id is imdbID of the movie
+     * @return found movie
+     */
     @Override
     public MovieDto getMovie(String id) {
         Movie movieInDb = findById(id);
-        log.info("Movie is fetched from the database");
+        log.info(MessageFormat.format(Message.SUCCESSFUL_OPERATION_IN_SERVICE, "fetched from the database"));
 
         return converter.convert(movieInDb);
     }
 
+    /**
+     *
+     * @param title is search criteria of the method
+     * @param pageable stores values of the page (number and size)
+     * @return matching movieDto objects after operation completes
+     */
     @Override
     public List<MovieDto> searchMovies(String title, Pageable pageable) {
         return repository.findAllByTitleLikeIgnoreCase(title, pageable)
@@ -131,6 +165,11 @@ public class MovieServiceImpl implements MovieService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     *
+     * @param pageable stores values of the page (number and size)
+     * @return custom page contains movie dto objects
+     */
     @Override
     public CustomPage<Movie, MovieDto> pagination(Pageable pageable) {
         Page<Movie> page = repository.findAll(pageable);
@@ -145,10 +184,16 @@ public class MovieServiceImpl implements MovieService {
         return new CustomPage<>(page, movieDtoList);
     }
 
+    /**
+     *
+     * @param id is imdbID of the movie
+     * @param movieDto is the template object which stores information of the new movie object
+     * @return movieDto format of the updated movie object
+     */
     @Override
     public MovieDto updateMovie(String id, MovieDto movieDto) {
         Movie movieInDb = findById(id);
-        log.info("Movie is found from the database");
+        log.info(MessageFormat.format(Message.MOVIE_FOUND, id));
 
         movieInDb.setTitle(movieDto.getTitle());
         movieInDb.setYear(movieDto.getYear());
@@ -170,56 +215,56 @@ public class MovieServiceImpl implements MovieService {
 
         if (movieInDb.getType() == Type.SERIES) {
             movieInDb.setTotalSeasons(movieDto.getTotalSeasons());
-            log.info("Type is series");
+            log.info(MessageFormat.format(Message.TYPE_OF_MOVIE, "series"));
         } else {
             movieInDb.setTotalSeasons(null);
-            log.info("Type is movie");
+            log.info(MessageFormat.format(Message.TYPE_OF_MOVIE, "movie"));
         }
 
         Movie savedMovie = repository.save(movieInDb);
-        log.info("Movie is updated");
+        log.info(MessageFormat.format(Message.SUCCESSFUL_OPERATION_IN_SERVICE, "updated"));
 
         return converter.convert(savedMovie);
     }
 
+    /**
+     *
+     * @param id is imdbID of the movie
+     */
     @Override
     public void deleteMovie(String id) {
         if (!repository.existsById(id)) {
-            throw new EntityNotFoundException(String.format(Message.NOT_FOUND, id));
+            throw new DocumentNotFoundException(MessageFormat.format(Message.NOT_FOUND, id));
         }
-        log.info("Movie is found");
+        log.info(MessageFormat.format(Message.MOVIE_FOUND, id));
 
         repository.deleteById(id);
-        log.info("Movie is successfully deleted");
+        log.info(MessageFormat.format(Message.SUCCESSFUL_OPERATION_IN_SERVICE, "deleted"));
     }
 
+    /**
+     *
+     * @return verification message about the restore of the database
+     */
     @Override
     public String restoreDatabase() {
         if (repository.count() > 0) {
-            log.info("Repository is empty");
+            log.info("Database is not empty");
             repository.deleteAll();
         }
 
         log.info("Before read");
-
         List<Movie> movieList = FileHandler.read();
-        log.info("File is read");
+        log.info("After read");
 
         repository.saveAll(movieList);
-        log.info("Database is restored");
+        log.info(Message.DATABASE_RESTORED);
 
-        return "Database is restored";
-    }
-
-    private void validateMovieExist(String id) {
-        if (repository.existsById(id)) {
-            log.warn("Movie already exists");
-            throw new EntityAlreadyExistException(String.format(Message.ALREADY_EXIST, id));
-        }
+        return Message.DATABASE_RESTORED;
     }
 
     private Movie findById(String id) {
         return repository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(String.format(Message.NOT_FOUND, id)));
+                .orElseThrow(() -> new DocumentNotFoundException(MessageFormat.format(Message.NOT_FOUND, id)));
     }
 }
