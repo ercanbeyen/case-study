@@ -8,7 +8,6 @@ import lombok.*;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.FieldType;
 import org.springframework.data.mongodb.core.mapping.MongoId;
-import org.springframework.hateoas.RepresentationModel;
 
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;

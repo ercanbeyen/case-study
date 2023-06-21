@@ -31,7 +31,7 @@
             <appender-ref ref="STDOUT"/>
             <appender-ref ref="FILEOUT"/>
         </root>
-        <logger name="com.ercanbeyen.casestudy.service.impl" additivity="false" level="warn">
+        <logger name="com.ercanbeyen.casestudy.service.impl" additivity="false" level="info">
             <appender-ref ref="STDOUT"/>
             <appender-ref ref="FILEOUT"/>
         </logger>
