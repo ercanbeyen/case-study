@@ -1,4 +1,4 @@
-# Case Study
+# Movie Website
 ---
 
 ## Spring Boot Application
@@ -16,18 +16,22 @@ POST   /api/v1/movies - Insert a new movie
 GET    /api/v1/movies?type={type}&director={directorName}&rating={imdbRating}&orderBy={sortType}&maxSize={limit}&page={pageNumber}&size={pageSize} - Filter the movies with the specified criterias and list them on a page
 GET    /api/v1/movies/search?title={movieTitle}&page={pageNumber}&size={pageSize} - Search movies by movie title and list the final values on a page
 GET    /api/v1/movies/pagination?page={pageNumber}&size={pageSize} - List the movies on a page
-GET    /api/v1/movies/{id} - Fetches a particular movie
-PUT    /api/v1/movies/{id} - Updates a particular movie
-DELETE /api/v1/movies/{id} - Deletes a particular movie
-POST   /api/v1/movies/restore/database - Restore the database using the records from the MovieWebSiteJson document
+GET    /api/v1/movies/{id} - Fetch a particular movie
+PUT    /api/v1/movies/{id} - Update a particular movie
+DELETE /api/v1/movies/{id} - Delete a particular movie
+POST   /api/v1/movies/restore/database - Restore the database using the records from the MovieWebsiteJson document in docs folder
 ```
 
 ### Requirements
 
 - Each movie must have imdb id, title, released year, director, writers and actors and type
-- Each imdb id must be unique.
+- Each imdb id must be unique
 - Metascore, imdb rating, imdb votes and total seasons must positive value
 - You may also enter the value of total seasons which type is series
+
+### Additionals
+
+- Cron jobs are going to start working after you start the program.
 
 ### Tech Stack
 
@@ -41,7 +45,6 @@ POST   /api/v1/movies/restore/database - Restore the database using the records 
 - Docker
 - Docker Compose
 
-
 ### Prerequisties
 ---
 - Maven
@@ -54,7 +57,7 @@ In order to pull the mongo image from the Dockerhub, you should run the below co
 
 `$ docker pull mongo`
 
-Then, you should run the below commands in order to run the aoolication
+Then, you should run the below commands in order to run the application
 
 1) Create jar file
 2) Create the image of the application via building
